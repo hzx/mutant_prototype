@@ -1,0 +1,133 @@
+\documentclass[a4paper,12pt]{book}
+%\usepackage{microtype}
+%\usepackage{parskip}
+\usepackage[english]{babel}
+\usepackage{blindtext}
+\begin{document}
+\title{Mutant language specification 0.1}
+\maketitle
+
+\chapter{Overview}
+
+Mutant - domain specific language for rapid web development. Eliminate
+90\% development effort. Make development workflow faster, working in two
+modes - debug, release.
+
+Debug mode create fast build, continuous code generation to destination
+languages, build on the fly.
+
+Release mode create optimized build, minify css, js, html, inline images into
+css.
+
+\section{Modules, namespaces}
+Code consists of modules, each module have same namespace name.
+
+\section{Simple types}
+
+\begin{verbatim}
+void, int, float, bool, string, datetime, tag.
+\end{verbatim}
+
+\section{Function type}
+
+Declare alias and function signature;
+
+\begin{verbatim}
+typedef FuncType {type} ({params});
+\end{verbatim}
+
+Anonymous function declaration
+
+\begin{verbatim}
+typedef EventHandler void (Event e);
+var clickHandler = void (Event e) { };
+\end{verbatim}
+
+\section{Collections}
+
+\section{Array declaration}
+
+\begin{verbatim}
+type ident[length] = [a1, a2, an];
+\end{verbatim}
+
+\section{Dictionary declaration}
+
+\begin{verbatim}
+type ident{key_type:value_type} = {k1:v1, k2:v2, kn:vn};
+\end{verbatim}
+
+\section{Type definition, alias}
+
+\begin{verbatim}
+typedef alias declaration;
+\end{verbatim}
+
+\section{User types}
+
+enum, struct, class, interface\\
+
+\begin{verbatim}
+enum ident {
+  ident = {litint};
+}
+
+interface ident {
+  {type} ident({params});
+}
+
+class ident extends ident_base implements iface1, iface2, ifacen {
+  () { {function_body} }
+  {type} ident = {expr};
+  {type} ident({params}) { {function_body} }
+}
+
+struct ident extends ident_base {
+  {type} ident { {struct_var_params} };
+}
+\end{verbatim}
+
+Inheritance:\\
+
+interface, struct, classes may be extended. Function overloading accepted only
+with overload keyword. For interface inheritance not allowed, for class
+allowed from only one class and implement many interfaces (methods in
+interfaces must have distinct names). For struct allowed only from one
+superstruct.
+
+\begin{verbatim}
+\end{verbatim}
+
+Function body:\\
+
+\begin{verbatim}
+{var_declaration} | {return_operator} | {if_operator} |
+{for_operator} | {foreach_operator} | {while_operator}
+\end{verbatim}
+
+Variable body:\\
+
+\begin{verbatim}
+{bool_literal} | {int_literal} | {float_literal} | {string_literal} |
+{datetime_literal} |
+{array_body} | {dictionary_body} | 
+{anonymous_function} | {expr}
+\end{verbatim}
+
+Class instantiation:\\
+
+\begin{verbatim}
+var app = App();
+\end{verbatim}
+
+Take members and methods:\\
+
+Cascade operator:
+
+\begin{verbatim}
+App.instance()
+  ..title = "hello"
+  ..setStatistic("user-01")
+  ..init();
+\end{verbatim}
+\end{document}

@@ -1,0 +1,25 @@
+export HOME
+IMGUTIL=$HOME/projects/imgutil
+
+ifeq (@(DEBUG),1)
+BUILD=build-debug
+else
+BUILD=build-release
+endif
+
+CC = clang++
+OPT += -Wall -O2 -std=c++11
+
+CFLAGS += -I$(TUP_CWD)/mutant\
+-I/usr/local/include\
+-I$(IMGUTIL)
+
+LFLAGS += -L$(TUP_CWD)/mutant\
+-L/usr/local/lib\
+-L$(IMGUTIL)/$(BUILD)/imgutil
+
+!cc = |> $(CC) $(OPT) $(CFLAGS) -c %f -o %o |> %B.o
+!ccp = |> $(CC) $(OPT) $(CFLAGS) -fPIC -c %f -o %o |> %B.o
+!exe = |> $(CC) $(OPT) $(LFLAGS) $(RPATH) -o %o %f $(LIBS) |> %d
+!lib = |> $(CC) $(OPT) $(LFLAGS) $(RPATH) -shared -o %o %f $(LIBS) |> lib%d.so
+!ar = |> ar crs %o %f |> lib%d.a

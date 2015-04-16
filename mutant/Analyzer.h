@@ -1,16 +1,18 @@
-#ifndef ANALYZER_H
-#define ANALYZER_H
+#ifndef MUTANT_ANALYZER_H
+#define MUTANT_ANALYZER_H
 
 
-class Analyzer
-{
+#include <vector>
+#include "structs.h"
+
+
+using std::vector;
+
+
+class Analyzer {
 public:
-  Analyzer();
-  ~Analyzer();
-
-private:
-  /* data */
+  int process(vector<Module*>& modules, Module* module);
 };
 
 
-#endif /* end of include guard: ANALYZER_H */
+#endif /* end of include guard: MUTANT_ANALYZER_H */

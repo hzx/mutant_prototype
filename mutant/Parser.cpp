@@ -8,6 +8,7 @@ using std::unique_ptr;
 
 
 // TODO: introduce const keyword
+// TODO: add +=, -=, *=, /=, %= operations
 
 
 string ZERO_TOKEN_WORD = "\0";

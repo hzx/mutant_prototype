@@ -795,6 +795,19 @@ int JsFormatter::formatIndex(Index* index) {
 }
 
 
+int JsFormatter::formatIn(In* in) {
+  int error = formatOperatorNode(in->left);
+  if (error < 0) return error;
+
+  *store << " in ";
+
+  error = formatOperatorNode(in->right);
+  if (error < 0) return error;
+
+  return ERROR_OK;
+}
+
+
 int JsFormatter::formatIdentifier(Identifier* id) {
   formatNames(id->names);
 

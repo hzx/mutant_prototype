@@ -654,14 +654,34 @@ TEST_F(JsFormatterTest, formatIndex) {
 }
 
 
+TEST_F(JsFormatterTest, formatIn) {
+  string expected = "a in b";
+
+  unique_ptr<Identifier> a(new Identifier());
+  a->names = {"a"};
+  unique_ptr<Identifier> b(new Identifier());
+  b->names = {"b"};
+
+  unique_ptr<In> in(new In());
+  in->left = a.release();
+  in->right = b.release();
+
+  int error = formatter.formatIn(in.get());
+  string actual = store.str();
+
+  ASSERT_THAT(error, ERROR_OK);
+  ASSERT_THAT(actual, expected);
+}
+
+
 TEST_F(JsFormatterTest, formatIdentifier) {
+  string expected = "foo.flag = 3;\n";
+
   unique_ptr<Identifier> i(new Identifier());
   i->names = {"foo", "flag"};
   unique_ptr<IntLiteral> il(new IntLiteral());
   il->value = 3;
   i->node = il.release();
-
-  string expected = "foo.flag = 3;\n";
 
   int error = formatter.formatIdentifier(i.get());
   string actual = store.str();
@@ -916,6 +936,8 @@ TEST_F(JsFormatterTest, formatNot) {
 
 
 TEST_F(JsFormatterTest, formatAnd) {
+  string expected = "a && b";
+
   unique_ptr<And> a(new And());
   unique_ptr<Identifier> l(new Identifier());
   l->names = {"a"};
@@ -923,8 +945,6 @@ TEST_F(JsFormatterTest, formatAnd) {
   r->names = {"b"};
   a->left = l.release();
   a->right = r.release();
-
-  string expected = "a && b";
 
   int error = formatter.formatAnd(a.get());
   string actual = store.str();

@@ -52,6 +52,7 @@ public:
   int formatNew(New* n);
   int formatDelete(Delete* del);
   int formatIndex(Index* index);
+  int formatIn(In* in);
   int formatIdentifier(Identifier* id);
   int formatInlineIdentifier(Identifier* id);
   int formatArrayLiteral(ArrayLiteral* arr);

@@ -1,6 +1,6 @@
 #include "StyleParser.h"
 
 
-int StyleParser::parse(std::string source) {
+int StyleParser::parse(string source) {
   return 0;
 }

@@ -201,6 +201,7 @@ bool isFloatLiteral(string& word) {
 
 bool isOperatorNode(Node* node) {
   switch (node->code) {
+    case Node::IN:
     case Node::AND:
     case Node::OR:
     case Node::ADD:
@@ -239,6 +240,7 @@ bool isTagName(vector<string>& names) {
       break;
     case 'i':
       if (name == "i") return true;
+      if (name == "in") return true;
       if (name == "input") return true;
       break;
     case 'm':

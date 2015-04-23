@@ -160,10 +160,22 @@ Add::Add()
 }
 
 
+Add::~Add() {
+  delete left;
+  delete right;
+}
+
+
 AddAssign::AddAssign()
     : left(nullptr)
     , right(nullptr) {
   code = Node::ADD_ASSIGN;
+}
+
+
+AddAssign::~AddAssign() {
+  delete left;
+  delete right;
 }
 
 
@@ -173,9 +185,19 @@ AddPrefix::AddPrefix()
 }
 
 
+AddPrefix::~AddPrefix() {
+  delete node;
+}
+
+
 AddSuffix::AddSuffix()
     : node(nullptr) {
   code = Node::ADD_SUFFIX;
+}
+
+
+AddSuffix::~AddSuffix() {
+  delete node;
 }
 
 
@@ -186,10 +208,22 @@ Sub::Sub()
 }
 
 
+Sub::~Sub() {
+  delete left;
+  delete right;
+}
+
+
 SubAssign::SubAssign()
     : left(nullptr)
     , right(nullptr) {
   code = Node::SUB_ASSIGN;
+}
+
+
+SubAssign::~SubAssign() {
+  delete left;
+  delete right;
 }
 
 
@@ -199,9 +233,19 @@ SubPrefix::SubPrefix()
 }
 
 
+SubPrefix::~SubPrefix() {
+  delete node;
+}
+
+
 SubSuffix::SubSuffix()
     : node(nullptr) {
   code = Node::SUB_SUFFIX;
+}
+
+
+SubSuffix::~SubSuffix() {
+  delete node;
 }
 
 
@@ -212,10 +256,22 @@ Mul::Mul()
 }
 
 
+Mul::~Mul() {
+  delete left;
+  delete right;
+}
+
+
 MulAssign::MulAssign()
     : left(nullptr)
     , right(nullptr) {
   code = Node::MUL_ASSIGN;
+}
+
+
+MulAssign::~MulAssign() {
+  delete left;
+  delete right;
 }
 
 
@@ -226,10 +282,22 @@ Div::Div()
 }
 
 
+Div::~Div() {
+  delete left;
+  delete right;
+}
+
+
 DivAssign::DivAssign()
     : left(nullptr)
     , right(nullptr) {
   code = Node::DIV_ASSIGN;
+}
+
+
+DivAssign::~DivAssign() {
+  delete left;
+  delete right;
 }
 
 
@@ -240,10 +308,22 @@ Idiv::Idiv()
 }
 
 
+Idiv::~Idiv() {
+  delete left;
+  delete right;
+}
+
+
 IdivAssign::IdivAssign()
     : left(nullptr)
     , right(nullptr) {
   code = Node::IDIV_ASSIGN;
+}
+
+
+IdivAssign::~IdivAssign() {
+  delete left;
+  delete right;
 }
 
 
@@ -254,10 +334,22 @@ ShiftLeft::ShiftLeft()
 }
 
 
+ShiftLeft::~ShiftLeft() {
+  delete left;
+  delete right;
+}
+
+
 ShiftRight::ShiftRight()
     : left(nullptr)
     , right(nullptr) {
   code = Node::SHIFT_RIGHT;
+}
+
+
+ShiftRight::~ShiftRight() {
+  delete left;
+  delete right;
 }
 
 
@@ -268,10 +360,22 @@ Less::Less()
 }
 
 
+Less::~Less() {
+  delete left;
+  delete right;
+}
+
+
 LessEqual::LessEqual()
     : left(nullptr)
     , right(nullptr) {
   code = Node::LESS_EQUAL;
+}
+
+
+LessEqual::~LessEqual() {
+  delete left;
+  delete right;
 }
 
 
@@ -282,6 +386,12 @@ Greater::Greater()
 }
 
 
+Greater::~Greater() {
+  delete left;
+  delete right;
+}
+
+
 GreaterEqual::GreaterEqual()
     : left(nullptr)
     , right(nullptr) {
@@ -289,9 +399,20 @@ GreaterEqual::GreaterEqual()
 }
 
 
+GreaterEqual::~GreaterEqual() {
+  delete left;
+  delete right;
+}
+
+
 Not::Not()
     : node(nullptr) {
   code = Node::NOT;
+}
+
+
+Not::~Not() {
+  delete node;
 }
 
 
@@ -302,10 +423,22 @@ And::And()
 }
 
 
+And::~And() {
+  delete left;
+  delete right;
+}
+
+
 Band::Band()
     : left(nullptr)
     , right(nullptr) {
   code = Node::BAND;
+}
+
+
+Band::~Band() {
+  delete left;
+  delete right;
 }
 
 
@@ -316,10 +449,22 @@ Or::Or()
 }
 
 
+Or::~Or() {
+  delete left;
+  delete right;
+}
+
+
 Xor::Xor()
     : left(nullptr)
     , right(nullptr) {
   code = Node::XOR;
+}
+
+
+Xor::~Xor() {
+  delete left;
+  delete right;
 }
 
 
@@ -330,10 +475,22 @@ Equal::Equal()
 }
 
 
+Equal::~Equal() {
+  delete left;
+  delete right;
+}
+
+
 NotEqual::NotEqual()
     : left(nullptr)
     , right(nullptr) {
   code = Node::NOT_EQUAL;
+}
+
+
+NotEqual::~NotEqual() {
+  delete left;
+  delete right;
 }
 
 
@@ -348,6 +505,17 @@ Index::~Index() {
   delete key;
   delete node;
   delete tail;
+}
+
+
+In::In() {
+  code = Node::IN;
+}
+
+
+In::~In() {
+  delete left;
+  delete right;
 }
 
 
@@ -366,6 +534,12 @@ If::~If() {
 
 Case::Case()
     : value(nullptr) {
+}
+
+
+Case::~Case() {
+  delete value;
+  for (auto node: nodes) delete node;
 }
 
 
@@ -471,8 +645,8 @@ Tag::Tag()
 
 Tag::~Tag() {
   for (auto ev: events) delete ev;
-  for (auto child: childs) delete child;
   for (auto prop: props) delete prop;
+  for (auto child: childs) delete child;
   delete value;
 }
 
@@ -510,10 +684,7 @@ Function::~Function() {
 }
 
 
-Variable::Variable()
-    : type(nullptr)
-    , clas(nullptr)
-    , node(nullptr) {
+Variable::Variable() {
   code = Node::VARIABLE;
 }
 

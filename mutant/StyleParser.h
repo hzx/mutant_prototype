@@ -5,8 +5,11 @@
 #include <string>
 
 
+using std::string;
+
+
 class StyleParser {
-  int parse(std::string source);
+  int parse(string source);
 };
 
 

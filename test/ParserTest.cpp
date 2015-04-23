@@ -745,6 +745,46 @@ TEST_F(ParserTest, parseIndex) {
 }
 
 
+TEST_F(ParserTest, parseIn) {
+  file->content = "bool isFeatureSupported() {"
+  "  return \"feature\" in window;"
+  /* "  return a in b;" */
+  "}";
+
+  int lexerError = lexer.tokenize(file->content, file->tokens);
+  int parserError = parser.parse(&module);
+
+  ASSERT_THAT(lexerError, ERROR_OK);
+  ASSERT_THAT(parserError, ERROR_OK);
+  ASSERT_THAT(module.functions.size(), 1);
+
+  Function* fn = module.functions[0];
+
+  ASSERT_THAT(fn->nodes.size(), 1);
+  ASSERT_TRUE(fn->nodes[0] != nullptr);
+  ASSERT_THAT(fn->nodes[0]->code, Node::RETURN);
+
+  Return* ret = reinterpret_cast<Return*>(fn->nodes[0]);
+
+  ASSERT_TRUE(ret->node != nullptr);
+  ASSERT_THAT(ret->node->code, Node::IN);
+
+  In* in = reinterpret_cast<In*>(ret->node);
+
+  ASSERT_TRUE(in->left != nullptr);
+  ASSERT_THAT(in->left->code, Node::STRING_LITERAL);
+  ASSERT_TRUE(in->right != nullptr);
+  ASSERT_THAT(in->right->code, Node::IDENTIFIER);
+
+  StringLiteral* s_feature = reinterpret_cast<StringLiteral*>(in->left);
+  Identifier* i_window = reinterpret_cast<Identifier*>(in->right);
+  vector<string> i_window_names = {"window"};
+
+  ASSERT_THAT(s_feature->value, testing::Eq("feature"));
+  ASSERT_THAT(i_window->names, testing::Eq(i_window_names));
+}
+
+
 TEST_F(ParserTest, parseArrayDeclaration) {
   file->content = "int main() {"
     "auto words = ["

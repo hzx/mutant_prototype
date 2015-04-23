@@ -22,6 +22,7 @@ int const GREATER_WEIGHT = 2;
 int const LESS_WEIGHT = 2;
 int const EQUAL_WEIGHT = 2;
 int const NOT_EQUAL_WEIGHT = 2;
+int const IN_WEIGHT = 2;
 int const ADD_WEIGHT = 3;
 int const SUB_WEIGHT = 3;
 int const MUL_WEIGHT = 4;
@@ -549,7 +550,6 @@ int Parser::parseExpression(Node*& node, int left, int right) {
 
   int error = parseExpressionNodes(nodes.nodes, left, semicolon);
   if (error < 0) return error;
-  /* return -nodes.nodes.size(); */
 
   return createExpression(node, nodes.nodes, 0, nodes.nodes.size());
 }
@@ -833,6 +833,21 @@ int Parser::parseExpressionNodes(vector<Node*>& nodes, int left, int right) {
         /* if (!isIdentifierFirst(word[0])) return EXPRESSION_UNKNOWN_TOKEN_ERROR; */
         if (!isIdentifierFirst(word[0])) break;
 
+        if (word == "in") {
+          if (cursor - mark > 0)  {
+            unique_ptr<Identifier> identifier(new Identifier());
+            error = parseNames(identifier->names, mark, cursor);
+            if (error < 0) return error;
+            nodes.push_back(identifier.release());
+          }
+
+          auto node = new In();
+          node->priority = IN_WEIGHT + bracketWeight;
+          nodes.push_back(node);
+          mark = cursor + 1;
+          break;
+        }
+
         if (word == "or") {
           if (cursor - mark > 0)  {
             unique_ptr<Identifier> identifier(new Identifier());
@@ -930,6 +945,15 @@ int Parser::parseExpressionNodes(vector<Node*>& nodes, int left, int right) {
 
     ++cursor;
   }
+
+  // add identifier remainder
+  if (right - mark > 0)  {
+    unique_ptr<Identifier> identifier(new Identifier());
+    error = parseNames(identifier->names, mark, right);
+    if (error < 0) return error;
+    nodes.push_back(identifier.release());
+  }
+
   return right;
 }
 
@@ -1085,6 +1109,15 @@ int Parser::createExpression(Node*& node, vector<Node*>& nodes, int left, int ri
       {
         SubPrefix* n = reinterpret_cast<SubPrefix*>(op.get());
         error = createExpression(n->node, nodes, min + 1, right);
+        if (error < 0) return error;
+      }
+      break;
+    case Node::IN:
+      {
+        In* n = reinterpret_cast<In*>(op.get());
+        error = createExpression(n->left, nodes, left, min);
+        if (error < 0) return error;
+        error = createExpression(n->right, nodes, min + 1, right);
         if (error < 0) return error;
       }
       break;
@@ -1774,6 +1807,7 @@ bool Parser::isExpression(int left, int right) {
   /* while (cursor < right) { */
     string& word = tokens->at(i).word;
 
+    if (word == "in") return true;
     if (word == "and") return true;
     if (word == "or") return true;
     if (word == "is") return true;
@@ -1923,6 +1957,7 @@ int Parser::detectNodes(int left, int right) {
 
 int Parser::detectNode(int left, int right) {
   string& word = tokens->at(left).word;
+
   switch (word[0]) {
     case '[':
       return AIM_ARRAY_DECLARATION;
@@ -1930,6 +1965,11 @@ int Parser::detectNode(int left, int right) {
       return AIM_DIC_DECLARATION;
     case '<':
       return AIM_TAG;
+  }
+
+  if (isExpression(left, right)) return AIM_EXPRESSION;
+
+  switch (word[0]) {
     case '"':
       return AIM_STRING_LITERAL;
     case '0':
@@ -1945,8 +1985,6 @@ int Parser::detectNode(int left, int right) {
       if (isIntLiteral(word)) return AIM_INT_LITERAL;
       if (isFloatLiteral(word)) return AIM_FLOAT_LITERAL;
   }
-
-  if (isExpression(left, right)) return AIM_EXPRESSION;
 
   for (int i = left; i < right; ++i) {
     switch (tokens->at(i).word[0]) {

@@ -58,8 +58,8 @@ public:
   int code;
   string name;
   int weight;
-  Module* module;
-  File* file;
+  Module* module = nullptr;
+  File* file = nullptr;
 };
 
 
@@ -111,20 +111,21 @@ public:
     EQUAL = 41,
     NOT_EQUAL = 42,
     INDEX = 43,
+    IN = 44,
 
-    IF = 44,
-    SWITCH = 45,
-    FOR = 46,
-    FOR_EACH = 47,
-    WHILE = 48,
-    RETURN = 49,
-    BREAK = 50,
-    CONTINUE = 51,
-    TAG = 52
+    IF = 45,
+    SWITCH = 46,
+    FOR = 47,
+    FOR_EACH = 48,
+    WHILE = 49,
+    RETURN = 50,
+    BREAK = 51,
+    CONTINUE = 52,
+    TAG = 53
   };
 
-  int code;
-  int priority;
+  int code = 0;
+  int priority = 1000000;
 };
 
 
@@ -274,211 +275,238 @@ public:
 class Add: public Node {
 public:
   Add();
-  Node* left;
-  Node* right;
+  ~Add();
+  Node* left = nullptr;
+  Node* right = nullptr;
 };
 
 
 class AddAssign: public Node {
 public:
   AddAssign();
-  Node* left;
-  Node* right;
+  ~AddAssign();
+  Node* left = nullptr;
+  Node* right = nullptr;
 };
 
 
 class AddPrefix: public Node {
 public:
   AddPrefix();
-  Node* node;
+  ~AddPrefix();
+  Node* node = nullptr;
 };
 
 
 class AddSuffix: public Node {
 public:
   AddSuffix();
-  Node* node;
+  ~AddSuffix();
+  Node* node = nullptr;
 };
 
 
 class Sub: public Node {
 public:
   Sub();
-  Node* left;
-  Node* right;
+  ~Sub();
+  Node* left = nullptr;
+  Node* right = nullptr;
 };
 
 
 class SubAssign: public Node {
 public:
   SubAssign();
-  Node* left;
-  Node* right;
+  ~SubAssign();
+  Node* left = nullptr;
+  Node* right = nullptr;
 };
 
 
 class SubPrefix: public Node {
 public:
   SubPrefix();
-  Node* node;
+  ~SubPrefix();
+  Node* node = nullptr;
 };
 
 
 class SubSuffix: public Node {
 public:
   SubSuffix();
-  Node* node;
+  ~SubSuffix();
+  Node* node = nullptr;
 };
 
 
 class Mul: public Node {
 public:
   Mul();
-  Node* left;
-  Node* right;
+  ~Mul();
+  Node* left = nullptr;
+  Node* right = nullptr;
 };
 
 
 class MulAssign: public Node {
 public:
   MulAssign();
-  Node* left;
-  Node* right;
+  ~MulAssign();
+  Node* left = nullptr;
+  Node* right = nullptr;
 };
 
 
 class Div: public Node {
 public:
   Div();
-  Node* left;
-  Node* right;
+  ~Div();
+  Node* left = nullptr;
+  Node* right = nullptr;
 };
 
 
 class DivAssign: public Node {
 public:
   DivAssign();
-  Node* left;
-  Node* right;
+  ~DivAssign();
+  Node* left = nullptr;
+  Node* right = nullptr;
 };
 
 
 class Idiv: public Node {
 public:
   Idiv();
-  Node* left;
-  Node* right;
+  ~Idiv();
+  Node* left = nullptr;
+  Node* right = nullptr;
 };
 
 
 class IdivAssign: public Node {
 public:
   IdivAssign();
-  Node* left;
-  Node* right;
+  ~IdivAssign();
+  Node* left = nullptr;
+  Node* right = nullptr;
 };
 
 
 class ShiftLeft: public Node {
 public:
   ShiftLeft();
-  Node* left;
-  Node* right;
+  ~ShiftLeft();
+  Node* left = nullptr;
+  Node* right = nullptr;
 };
 
 
 class ShiftRight: public Node {
 public:
   ShiftRight();
-  Node* left;
-  Node* right;
+  ~ShiftRight();
+  Node* left = nullptr;
+  Node* right = nullptr;
 };
 
 
 class Less: public Node {
 public:
   Less();
-  Node* left;
-  Node* right;
+  ~Less();
+  Node* left = nullptr;
+  Node* right = nullptr;
 };
 
 
 class LessEqual: public Node {
 public:
   LessEqual();
-  Node* left;
-  Node* right;
+  ~LessEqual();
+  Node* left = nullptr;
+  Node* right = nullptr;
 };
 
 
 class Greater: public Node {
 public:
   Greater();
-  Node* left;
-  Node* right;
+  ~Greater();
+  Node* left = nullptr;
+  Node* right = nullptr;
 };
 
 
 class GreaterEqual: public Node {
 public:
   GreaterEqual();
-  Node* left;
-  Node* right;
+  ~GreaterEqual();
+  Node* left = nullptr;
+  Node* right = nullptr;
 };
 
 
 class Not: public Node {
 public:
   Not();
-  Node* node;
+  ~Not();
+  Node* node = nullptr;
 };
 
 
 class And: public Node {
 public:
   And();
-  Node* left;
-  Node* right;
+  ~And();
+  Node* left = nullptr;
+  Node* right = nullptr;
 };
 
 
 class Band: public Node {
 public:
   Band();
-  Node* left;
-  Node* right;
+  ~Band();
+  Node* left = nullptr;
+  Node* right = nullptr;
 };
 
 
 class Or: public Node {
 public:
   Or();
-  Node* left;
-  Node* right;
+  ~Or();
+  Node* left = nullptr;
+  Node* right = nullptr;
 };
 
 
 class Xor: public Node {
 public:
   Xor();
-  Node* left;
-  Node* right;
+  ~Xor();
+  Node* left = nullptr;
+  Node* right = nullptr;
 };
 
 
 class Equal: public Node {
 public:
   Equal();
-  Node* left;
-  Node* right;
+  ~Equal();
+  Node* left = nullptr;
+  Node* right = nullptr;
 };
 
 
 class NotEqual: public Node {
 public:
   NotEqual();
-  Node* left;
-  Node* right;
+  ~NotEqual();
+  Node* left = nullptr;
+  Node* right = nullptr;
 };
 
 
@@ -494,11 +522,20 @@ public:
 };
 
 
+class In: public Node {
+public:
+  In();
+  ~In();
+  Node* left = nullptr;
+  Node* right = nullptr;
+};
+
+
 class If: public Node {
 public:
   If();
   ~If();
-  Node* condition;
+  Node* condition = nullptr;
   vector<Node*> nodes;
   vector<Node*> elseNodes;
 };
@@ -507,6 +544,7 @@ public:
 class Case {
 public:
   Case();
+  ~Case();
   Node* value = nullptr;
   vector<Node*> nodes;
 };
@@ -527,7 +565,7 @@ public:
   For();
   ~For();
   vector<Node*> initNodes;
-  Node* condition;
+  Node* condition = nullptr;
   vector<Node*> incNodes;
   vector<Node*> nodes;
 };
@@ -537,8 +575,8 @@ class ForEach: public Node {
 public:
   ForEach();
   ~ForEach();
-  Node* value; // TODO change to string value
-  Node* values;
+  Node* value = nullptr; // TODO change to string value
+  Node* values = nullptr;
   vector<Node*> nodes;
 };
 
@@ -547,7 +585,7 @@ class While: public Node {
 public:
   While();
   ~While();
-  Node* condition;
+  Node* condition = nullptr;
   vector<Node*> nodes;
 };
 
@@ -556,7 +594,7 @@ class Return: public Node {
 public:
   Return();
   ~Return();
-  Node* node;
+  Node* node = nullptr;
 };
 
 
@@ -577,7 +615,7 @@ public:
   TagEvent();
   ~TagEvent();
   string name;
-  Node* value;
+  Node* value = nullptr;
 };
 
 
@@ -586,7 +624,7 @@ public:
   TagProp();
   ~TagProp();
   string name;
-  Node* value;
+  Node* value = nullptr;
 };
 
 
@@ -598,7 +636,7 @@ public:
   vector<TagEvent*> events;
   vector<TagProp*> props;
   vector<Tag*> childs;
-  Node* value;
+  Node* value = nullptr;
 };
 
 
@@ -618,7 +656,7 @@ public:
 
   vector<string> names;
   string alias;
-  Type* type;
+  Type* type = nullptr;
 };
 
 
@@ -626,7 +664,7 @@ class FunctionParam {
 public:
   FunctionParam();
   vector<string> typeNames;
-  Type* type;
+  Type* type = nullptr;
   string name;
 };
 
@@ -648,14 +686,14 @@ public:
   ~Function();
 
   vector<string> returnTypeNames;
-  Type* returnType;
+  Type* returnType = nullptr;
   string name;
   vector<FunctionParam*> params;
   bool isConstructor = false;
   bool isOverride = false;
   bool isBind = false;
   bool isStatic = false;
-  Class* clas;
+  Class* clas = nullptr;
   vector<Node*> nodes;
 };
 
@@ -667,10 +705,10 @@ public:
 
   string name;
   vector<string> typeNames;
-  Type* type;
+  Type* type = nullptr;
   bool isStatic = false;
-  Class* clas;
-  Node* node;
+  Node* node = nullptr;
+  Class* clas = nullptr;
 };
 
 
@@ -688,7 +726,7 @@ public:
   ~Enum();
   /* string typeName; // by default int, just in case we enlarge integer types */
   vector<EnumAttribute*> attributes;
-  Class* clas;
+  Class* clas = nullptr;
 };
 
 

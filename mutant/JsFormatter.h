@@ -5,6 +5,7 @@
 #include <vector>
 #include <ostream>
 #include "structs.h"
+#include "errors.h"
 
 
 using std::vector;
@@ -16,25 +17,75 @@ public:
   JsFormatter();
 
   int formatModule(Module* module, ostream& store);
-  int formatImport(Import* import, ostream& store);
-  int formatUsing(Using* usingn, ostream& store);
-  int formatVariable(Variable* var, ostream& store);
-  int formatFunction(Function* fn, ostream& store);
-  int formatClass(Class* cl, ostream& store);
-  int formatIf(If* ifn, ostream& store);
-  int formatSwitch(Switch* sw, ostream& store);
-  int formatCase(Case* cs, ostream& store);
-  int formatFor(For* fr, ostream& store);
-  int formatForEach(ForEach* fe, ostream& store);
-  int formatWhile(While* wh, ostream& store);
-  int formatReturn(Return* ret, ostream& store);
-  int formatTag(Tag* tag, ostream& store);
-  int formatFunctionCall(FunctionCall* fc, ostream& store);
-  int formatIndex(Index* index, ostream& store);
-  int formatIdentifier(Identifier* id, ostream& store);
-  int formatExpression(Node* node, ostream& store);
+  int formatImport(Import* import);
+  int formatUsing(Using* usingn);
 
+  int formatGlobalVariable(Variable* var);
+  int formatStaticVariable(Variable* var);
+  int formatClassVariable(Variable* var);
+  int formatBlockVariable(Variable* var);
+  int formatInlineVariable(Variable* var);
+
+  int formatGlobalFunction(Function* fn);
+  int formatStaticFunction(Function* fn);
+  int formatClassFunction(Function* fn);
+  int formatConstructor(Function* fn);
+  void formatFunctionParams(vector<FunctionParam*>& params);
+
+  int formatEnum(Enum* en);
+  int formatClass(Class* clas);
+  int formatIf(If* ifn);
+  int formatSwitch(Switch* sw);
+  int formatCase(Case* cs);
+  int formatFor(For* fr);
+  int formatForEach(ForEach* fe);
+  int formatWhile(While* wh);
+  int formatBreak();
+  int formatContinue();
+  int formatReturn(Return* ret);
+  int formatTag(Tag* tag);
+  int formatTagProps(vector<TagProp*>& props);
+  int formatTagEvents(vector<TagEvent*>& events);
+  int formatTagChilds(vector<Tag*>& childs);
+  int formatFunctionCall(FunctionCall* fc);
+  int formatLambda(Lambda* lambda);
+  int formatNew(New* n);
+  int formatDelete(Delete* del);
+  int formatIndex(Index* index);
+  int formatIdentifier(Identifier* id);
+  int formatInlineIdentifier(Identifier* id);
+  int formatArrayLiteral(ArrayLiteral* arr);
+  int formatDicLiteral(DicLiteral* dic);
+
+  int formatAdd(Add* node);
+  int formatAddPrefix(AddPrefix* node);
+  int formatSub(Sub* node);
+  int formatSubPrefix(SubPrefix* node);
+  int formatMul(Mul* node);
+  int formatDiv(Div* node);
+  int formatIdiv(Idiv* node);
+  int formatLess(Less* node);
+  int formatLessEqual(LessEqual* node);
+  int formatGreater(Greater* node);
+  int formatGreaterEqual(GreaterEqual* node);
+  int formatNot(Not* node);
+  int formatAnd(And* node);
+  int formatOr(Or* node);
+  int formatEqual(Equal* node);
+  int formatNotEqual(NotEqual* node);
+
+  int formatRightNode(Node* node);
+  int formatBlockNode(Node* node);
+  void formatNames(vector<string>& names);
+  int formatOperatorNode(Node* node);
   int format(vector<Module*>& modules, Module* module);
+
+  void incIndent();
+  void decIndent();
+  void storeIndent();
+
+  ostream* store;
+  int indent = 0;
 };
 
 

@@ -111,6 +111,7 @@ FunctionCall::FunctionCall()
 
 FunctionCall::~FunctionCall() {
   for (auto param: params) delete param;
+  delete tail;
 }
 
 
@@ -139,6 +140,16 @@ New::New()
 
 New::~New() {
   for (auto param: params) delete param;
+}
+
+
+Delete::Delete() {
+  code = Node::DELETE;
+}
+
+
+Delete::~Delete() {
+  delete node;
 }
 
 
@@ -333,6 +344,13 @@ Index::Index()
 }
 
 
+Index::~Index() {
+  delete key;
+  delete node;
+  delete tail;
+}
+
+
 If::If()
     : condition(nullptr) {
   code = Node::IF;
@@ -460,8 +478,7 @@ Tag::~Tag() {
 
 
 Import::Import()
-    : module(nullptr)
-    , isExtern(false) {
+    : isExtern(false) {
 }
 
 
@@ -511,7 +528,8 @@ EnumAttribute::EnumAttribute()
 }
 
 
-Enum::Enum() {
+Enum::Enum()
+    : clas(nullptr) {
   code = Type::ENUM;
   /* typeName = "int"; */
 }
@@ -527,8 +545,24 @@ Interface::Interface() {
 }
 
 
+Interface::~Interface() {
+  for (auto f: functions) delete f;
+}
+
+
 Class::Class() {
   code = Type::CLASS;
+}
+
+
+Class::~Class() {
+  delete constructor;
+  for (auto i: interfaceNames) delete i;
+  for (auto i: interfaces) delete i;
+  for (auto e: enums) delete e;
+  for (auto f: functionDeclarations) delete f;
+  for (auto f: functions) delete f;
+  for (auto v: variables) delete v;
 }
 
 
@@ -553,4 +587,9 @@ File* Module::newFile() {
   auto file = new File();
   files.push_back(file);
   return file;
+}
+
+
+Modules::~Modules() {
+  for (auto module: modules) delete module;
 }

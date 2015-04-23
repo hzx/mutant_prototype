@@ -19,6 +19,7 @@ bool isIntLiteral(string& word);
 bool isFloatLiteral(string& word);
 bool isOperatorNode(Node* node);
 bool isForEach(int left, int right);
+bool isTagName(vector<string>& names);
 int getMinOpPriority(vector<Node*>& nodes, int left, int right);
 
 

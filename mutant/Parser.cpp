@@ -7,6 +7,9 @@
 using std::unique_ptr;
 
 
+// TODO: introduce const keyword
+
+
 string ZERO_TOKEN_WORD = "\0";
 string const CASE_WORD = "case";
 string const DEFAULT_WORD = "default";
@@ -79,11 +82,29 @@ int Parser::parse(Module* module_) {
 int Parser::parseGlobal(int left, int right) {
   Token& token = tokens->at(left);
 
-  if (token.word == "import")
-    return parseImport(module->imports, left + 1, right);
+  if (token.word == "extern") {
+    string& name = tokens->at(left + 1).word;
+    if (!isIdentifierFirst(name[0]))
+      return PARSE_EXTERN_IDENTIFIER_ERROR;
+    if (tokens->at(left + 2).word[0] != ';')
+      return PARSER_NO_SEMICOLON_ERROR;
+    module->externs.push_back(name);
+    return left + 3;
+  }
 
-  if (token.word == "using")
-    return parseUsing(module->usings, left + 1, right);
+  if (token.word == "import") {
+    unique_ptr<Import> import(new Import());
+    int error = parseImport(import.get(), left + 1, right);
+    if (error >= 0) module->imports.push_back(import.release());
+    return error;
+  }
+
+  if (token.word == "using") {
+    unique_ptr<Using> us(new Using());
+    int error = parseUsing(us.get(), left + 1, right);
+    if (error >= 0) module->usings.push_back(us.release());
+    return error;
+  }
 
   if (token.word == "enum") {
     unique_ptr<Enum> en(new Enum());
@@ -92,11 +113,19 @@ int Parser::parseGlobal(int left, int right) {
     return error;
   }
 
-  if (token.word == "interface")
-    return parseInterface(module->interfaces, left + 1, right);
+  if (token.word == "interface") {
+    unique_ptr<Interface> interface(new Interface());
+    int error = parseInterface(interface.get(), left + 1, right);
+    if (error >= 0) module->interfaces.push_back(interface.release());
+    return error;
+  }
 
-  if (token.word == "class")
-    return parseClass(module->classes, left + 1, right);
+  if (token.word == "class") {
+    unique_ptr<Class> clas(new Class());
+    int error = parseClass(clas.get(), left + 1, right);
+    if (error >= 0) module->classes.push_back(clas.release());
+    return error;
+  }
 
   int aim = detectGlobal(left, right);
 
@@ -128,12 +157,58 @@ int Parser::parseGlobal(int left, int right) {
 }
 
 
-int Parser::parseImport(vector<Import*>& imports, int left, int right) {
+int Parser::parseClassNodes(Class* clas, int left, int right) {
+  if (tokens->at(left).word == "enum") {
+    unique_ptr<Enum> en(new Enum());
+    int result = parseEnum(en.get(), left + 1, right);
+    if (result >= 0) {
+      en->clas = clas;
+      clas->enums.push_back(en.release());
+    }
+    return result;
+  }
+
+  int aim = detectGlobal(left, right);
+
+  switch (aim) {
+    case AIM_VARIABLE:
+      {
+        unique_ptr<Variable> var(new Variable());
+        int error = parseVariable(var.get(), left, right);
+        if (error >= 0) clas->variables.push_back(var.release());
+        return error;
+      }
+    case AIM_FUNCTION:
+      {
+        unique_ptr<Function> fn(new Function());
+        int error = parseFunction(fn.get(), left, right);
+        if (error >= 0) {
+          if (fn->isConstructor) {
+            if (clas->name != fn->name) return CLASS_CONSTRUCTOR_NAME_ERROR;
+            if (clas->constructor != nullptr) return CLASS_CONSTRUCTOR_REDEFINITION_ERROR;
+            clas->constructor = fn.release();
+          }
+          else clas->functions.push_back(fn.release());
+        }
+        return error;
+      }
+    case AIM_FUNCTION_DECLARATION:
+      {
+        unique_ptr<FunctionDeclaration> fd(new FunctionDeclaration());
+        int error = parseFunctionDeclaration(fd.get(), left, right);
+        if (error >= 0)
+          clas->functionDeclarations.push_back(fd.release());
+        return error;
+      }
+  }
+
+  return PARSER_CLASS_PATTERN_ERROR;
+}
+
+
+int Parser::parseImport(Import* import, int left, int right) {
   int semicolon = findSymbol(';', left, right);
   if (semicolon == right) return PARSER_NO_SEMICOLON_ERROR;
-
-  unique_ptr<Import> import(new Import());
-  import->module = module;
 
   int cursor = parseNames(import->names, left, semicolon);
   if (cursor < 0) return cursor; // contains error
@@ -144,17 +219,13 @@ int Parser::parseImport(vector<Import*>& imports, int left, int right) {
   else
     import->alias = import->names.back();
 
-  imports.push_back(import.release());
-
   return semicolon + 1;
 }
 
 
-int Parser::parseUsing(vector<Using*>& usings, int left, int right) {
+int Parser::parseUsing(Using* us, int left, int right) {
   int semicolon = findSymbol(';', left, right);
   if (semicolon == right) return PARSER_NO_SEMICOLON_ERROR;
-
-  unique_ptr<Using> us(new Using());
 
   int cursor = parseNames(us->names, left, semicolon);
   if (cursor < 0) return cursor; // contains error
@@ -165,8 +236,6 @@ int Parser::parseUsing(vector<Using*>& usings, int left, int right) {
   else
     us->alias = us->names.back();
     
-  usings.push_back(us.release());
-
   return semicolon + 1;
 }
 
@@ -239,13 +308,28 @@ int Parser::parseFunction(Function* function, int left, int right) {
   int closeCurlyBracket = findPairCurlyBracket(openCurlyBracket, right);
   if (closeCurlyBracket == right) return FUNCTION_CLOSE_CURLY_BRACKET_ERROR;
 
-  if (tokens->at(left).word == "override") {
-    function->isOverride = true;
+  if (tokens->at(left).word == "static") {
+    function->isStatic = true;
     ++left;
+  } else {
+    if (tokens->at(left).word == "bind") {
+      function->isBind = true;
+      ++left;
+    }
+    if (tokens->at(left).word == "override") {
+      function->isOverride = true;
+      ++left;
+    }
   }
 
-  int cursor = parseNames(function->returnTypeNames, left, openRoundBracket);
-  if (cursor < 0) return cursor; // contains error
+  int cursor = left;
+
+  if (tokens->at(left + 1).word[0] == '(') { // constructor
+    function->isConstructor = true;
+  } else {
+    cursor = parseNames(function->returnTypeNames, left, openRoundBracket);
+    if (cursor < 0) return cursor; // contains error
+  }
 
   function->name = tokens->at(cursor).word;
 
@@ -324,6 +408,7 @@ int Parser::parseFunctionParams(vector<FunctionParam*>& params, int left, int ri
 }
 
 
+// TODO: parse tail node
 int Parser::parseFunctionCall(FunctionCall* fc, int left, int right) {
   int semicolon = findSymbol(';', left, right);
 
@@ -338,6 +423,11 @@ int Parser::parseFunctionCall(FunctionCall* fc, int left, int right) {
   int closeRoundBracket = findPairRoundBracket(openRoundBracket, semicolon);
   result = parseFunctionCallParams(fc->params, openRoundBracket + 1, closeRoundBracket);
   if (result < 0) return result;
+
+  if (tokens->at(closeRoundBracket + 1).word[0] == '.') {
+    int cursor = parseNode(fc->tail, closeRoundBracket + 2, right);
+    return cursor;
+  }
 
   return semicolon != right ? semicolon + 1 : closeRoundBracket + 1;
 }
@@ -369,6 +459,11 @@ int Parser::parseVariable(Variable* variable, int left, int right) {
 
   int equal = findSymbol('=', left, semicolon);
 
+  if (tokens->at(left).word == "static") {
+    variable->isStatic = true;
+    ++left;
+  }
+
   int cursor = parseNames(variable->typeNames, left, equal);
   if (cursor < 0) return cursor; // contains error
 
@@ -383,43 +478,66 @@ int Parser::parseVariable(Variable* variable, int left, int right) {
 }
 
 
-int Parser::parseInterface(vector<Interface*>& interfaces, int left, int right) {
+// TODO: refactor, replace interfaces by Interface* interface
+int Parser::parseInterface(Interface* interface, int left, int right) {
   int openBracket = findSymbol('{', left, right);
   if (openBracket == right) return INTERFACE_OPEN_BRACKET_ERROR;
 
   int closeBracket = findPairCurlyBracket(openBracket, right);
   if (closeBracket == right) return INTERFACE_CLOSE_BRACKET_ERROR;
 
-  unique_ptr<Interface> interface(new Interface());
   interface->name = tokens->at(left).word;
 
   // TODO: parse body between brackets
-
-  interfaces.push_back(interface.release());
+  int cursor = openBracket + 1;
+  while (cursor < closeBracket) {
+    unique_ptr<FunctionDeclaration> decl(new FunctionDeclaration());
+    cursor = parseFunctionDeclaration(decl.get(), cursor, closeBracket);
+    if (cursor < 0) return cursor; // contains error
+    interface->functions.push_back(decl.release());
+  }
 
   return closeBracket + 1;
 }
 
 
-int Parser::parseClass(vector<Class*>& classes, int left, int right) {
+int Parser::parseClass(Class* clas, int left, int right) {
   int openBracket = findSymbol('{', left, right);
   if (openBracket == right) return CLASS_OPEN_BRACKET_ERROR;
 
   int closeBracket = findPairCurlyBracket(openBracket, right);
   if (closeBracket == right) return CLASS_CLOSE_BRACKET_ERROR;
 
-  unique_ptr<Class> clas(new Class());
   clas->name = tokens->at(left).word;
   if (!isIdentifierFirst(clas->name[0]))
     return CLASS_NAME_ERROR;
 
-  if (tokens->at(left + 1).word == "extends") {
-    int cursor = parseNames(clas->superNames, left + 2, openBracket);
+  int cursor = left + 1; // after name begin position
+
+  if (tokens->at(cursor).word == "extends") {
+    cursor = parseNames(clas->superNames, cursor + 1, openBracket);
     if (cursor < 0) return cursor; // contains error
-    /* if (cursor >= openBracket) return PARSER_NAMES_ERROR; */
   }
 
-  classes.push_back(clas.release());
+  if (tokens->at(cursor).word == "implements") {
+    ++cursor;
+    while (cursor < openBracket) {
+      unique_ptr<Names> names(new Names());
+      cursor = parseNames(names->names, cursor, openBracket);
+      if (cursor < 0) return cursor;
+      else clas->interfaceNames.push_back(names.release());
+      if (tokens->at(cursor).word[0] == ',') ++cursor;
+    }
+  }
+
+  int prev;
+  cursor = openBracket + 1;
+  while (cursor < closeBracket) {
+    prev = cursor;
+    cursor = parseClassNodes(clas, cursor, closeBracket);
+    if (cursor < 0) return cursor; // contains error
+    if (prev == cursor) return PARSER_PERPETUAL_LOOP;
+  }
 
   return closeBracket + 1;
 }
@@ -999,6 +1117,7 @@ int Parser::parseNew(New* newn, int left, int right) {
 } 
 
 
+// TODO: parse tail node
 int Parser::parseIndex(Index* index, int left, int right) {
   int semicolon = findSymbol(';', left, right);
   int openBracket = findSymbol('[', left, semicolon);
@@ -1019,6 +1138,11 @@ int Parser::parseIndex(Index* index, int left, int right) {
       cursor = parseNode(index->node, assign + 1, semicolon);
       if (cursor < 0) return cursor;
     }
+  }
+
+  if (tokens->at(closeBracket + 1).word[0] == '.') {
+    cursor = parseNode(index->tail, closeBracket + 2, right);
+    return cursor;
   }
 
   return semicolon != right ? semicolon + 1 : closeBracket + 1;
@@ -1377,6 +1501,13 @@ int Parser::parseNodesOnce(vector<Node*>& nodes, int left, int right) {
   if (right - left <= 0) return right;
 
   Token& token = tokens->at(left);
+
+  if (token.word == "delete") {
+    unique_ptr<Delete> del(new Delete());
+    int error = parseNode(del->node, left + 1, right);
+    if (error >= 0) nodes.push_back(del.release());
+    return error;
+  }
 
   if (token.word == "if") {
     unique_ptr<If> ifn(new If());

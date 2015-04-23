@@ -223,6 +223,48 @@ bool isOperatorNode(Node* node) {
 }
 
 
+bool isTagName(vector<string>& names) {
+  if (names.size() != 1) return false;
+
+  string& name = names[0];
+  switch (name[0]) {
+    case 'a':
+      if (name == "a") return true;
+      break;
+    case 'b':
+      if (name == "b") return true;
+      break;
+    case 'd':
+      if (name == "div") return true;
+      break;
+    case 'i':
+      if (name == "i") return true;
+      if (name == "input") return true;
+      break;
+    case 'm':
+      if (name == "meta") return true;
+    case 's':
+      if (name == "span") return true;
+      if (name == "strong") return true;
+      break;
+    case 't':
+      if (name == "tr") return true;
+      if (name == "td") return true;
+      if (name == "th") return true;
+      if (name == "thead") return true;
+      if (name == "tbody") return true;
+      if (name == "table") return true;
+      if (name == "textarea") return true;
+      break;
+    case 'u':
+      if (name == "u") return true;
+      break;
+  }
+
+  return false;
+}
+
+
 int getMinOpPriority(vector<Node*>& nodes, int left, int right) {
   int min = MIN_DEFAULT;
   int index = -1;

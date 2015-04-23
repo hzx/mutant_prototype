@@ -17,8 +17,9 @@ public:
   Parser();
   int parse(Module* module);
   int parseGlobal(int left, int right);
-  int parseImport(vector<Import*>& imports, int left, int right);
-  int parseUsing(vector<Using*>& usings, int left, int right);
+  int parseClassNodes(Class* clas, int left, int right);
+  int parseImport(Import* import, int left, int right);
+  int parseUsing(Using* us, int left, int right);
   int parseEnum(Enum* en, int left, int right);
   int parseFunctionDeclaration(FunctionDeclaration* declaration, int left, int right);
   int parseFunction(Function* function, int left, int right);
@@ -27,8 +28,8 @@ public:
   int parseFunctionCall(FunctionCall* fc, int left, int right);
   int parseFunctionCallParams(vector<Node*>& params, int left, int right);
   int parseVariable(Variable* variable, int left, int right);
-  int parseInterface(vector<Interface*>& interfaces, int left, int right);
-  int parseClass(vector<Class*>& classes, int left, int right);
+  int parseInterface(Interface* interface, int left, int right);
+  int parseClass(Class* clas, int left, int right);
   int parseExpression(Node*& node, int left, int right);
   int parseExpressionNodes(vector<Node*>& nodes, int left, int right);
   int createExpression(Node*& node, vector<Node*>& nodes, int left, int right);

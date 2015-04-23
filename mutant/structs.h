@@ -82,44 +82,45 @@ public:
     LAMBDA = 13,
 
     NEW = 14,
-    ADD = 15,
-    ADD_ASSIGN = 16,
-    ADD_PREFIX = 17,
-    ADD_SUFFIX = 18,
-    SUB = 19,
-    SUB_ASSIGN = 20,
-    SUB_PREFIX = 21,
-    SUB_SUFFIX = 22,
-    MUL = 23,
-    MUL_ASSIGN = 24,
-    DIV = 25,
-    DIV_ASSIGN = 26,
-    IDIV = 27,
-    IDIV_ASSIGN = 28,
-    SHIFT_LEFT = 29,
-    SHIFT_RIGHT = 30,
-    LESS = 31,
-    LESS_EQUAL = 32,
-    GREATER = 33,
-    GREATER_EQUAL = 34,
-    NOT = 35,
-    AND = 36,
-    BAND = 37,
-    OR = 38,
-    XOR = 39,
-    EQUAL = 40,
-    NOT_EQUAL = 41,
-    INDEX = 42,
+    DELETE = 15,
+    ADD = 16,
+    ADD_ASSIGN = 17,
+    ADD_PREFIX = 18,
+    ADD_SUFFIX = 19,
+    SUB = 20,
+    SUB_ASSIGN = 21,
+    SUB_PREFIX = 22,
+    SUB_SUFFIX = 23,
+    MUL = 24,
+    MUL_ASSIGN = 25,
+    DIV = 26,
+    DIV_ASSIGN = 27,
+    IDIV = 28,
+    IDIV_ASSIGN = 29,
+    SHIFT_LEFT = 30,
+    SHIFT_RIGHT = 31,
+    LESS = 32,
+    LESS_EQUAL = 33,
+    GREATER = 34,
+    GREATER_EQUAL = 35,
+    NOT = 36,
+    AND = 37,
+    BAND = 38,
+    OR = 39,
+    XOR = 40,
+    EQUAL = 41,
+    NOT_EQUAL = 42,
+    INDEX = 43,
 
-    IF = 43,
-    SWITCH = 44,
-    FOR = 45,
-    FOR_EACH = 46,
-    WHILE = 47,
-    RETURN = 48,
-    BREAK = 49,
-    CONTINUE = 50,
-    TAG = 51
+    IF = 44,
+    SWITCH = 45,
+    FOR = 46,
+    FOR_EACH = 47,
+    WHILE = 48,
+    RETURN = 49,
+    BREAK = 50,
+    CONTINUE = 51,
+    TAG = 52
   };
 
   int code;
@@ -206,8 +207,9 @@ public:
   Identifier();
   ~Identifier();
   vector<string> names;
-  Type* type;
-  Node* node;
+  Type* type = nullptr;
+  Node* node = nullptr;
+  bool isClassMember = false;
 };
 
 
@@ -216,8 +218,10 @@ public:
   FunctionCall();
   ~FunctionCall();
   vector<string> names;
-  Function* function;
+  Function* function = nullptr;
   vector<Node*> params;
+  Node* tail = nullptr;
+  bool isClassMember = false;
 };
 
 
@@ -255,6 +259,15 @@ public:
   vector<string> names;
   Class* clas;
   vector<Node*> params;
+  bool isClassMember = false;
+};
+
+
+class Delete: public Node {
+public:
+  Delete();
+  ~Delete();
+  Node* node = nullptr;
 };
 
 
@@ -472,9 +485,12 @@ public:
 class Index: public Node {
 public:
   Index();
+  ~Index();
   vector<string> names;
-  Node* key;
-  Node* node;
+  Node* key = nullptr;
+  Node* node = nullptr;
+  Node* tail = nullptr;
+  bool isClassMember = false;
 };
 
 
@@ -491,7 +507,7 @@ public:
 class Case {
 public:
   Case();
-  Node* value;
+  Node* value = nullptr;
   vector<Node*> nodes;
 };
 
@@ -500,7 +516,7 @@ class Switch: public Node {
 public:
   Switch();
   ~Switch();
-  Node* value;
+  Node* value = nullptr;
   vector<Case*> cases;
   vector<Node*> defNodes;
 };
@@ -521,7 +537,7 @@ class ForEach: public Node {
 public:
   ForEach();
   ~ForEach();
-  Node* value;
+  Node* value; // TODO change to string value
   Node* values;
   vector<Node*> nodes;
 };
@@ -580,8 +596,8 @@ public:
   ~Tag();
   vector<string> names;
   vector<TagEvent*> events;
-  vector<Tag*> childs;
   vector<TagProp*> props;
+  vector<Tag*> childs;
   Node* value;
 };
 
@@ -592,7 +608,6 @@ public:
 
   vector<string> names;
   string alias;
-  Module* module; // TODO: maybe not needed
   bool isExtern;
 };
 
@@ -623,6 +638,7 @@ public:
   vector<string> returnTypeNames;
   Type* returnType;
   vector<FunctionParam*> params;
+  Class* clas = nullptr;
 };
 
 
@@ -635,7 +651,10 @@ public:
   Type* returnType;
   string name;
   vector<FunctionParam*> params;
+  bool isConstructor = false;
   bool isOverride = false;
+  bool isBind = false;
+  bool isStatic = false;
   Class* clas;
   vector<Node*> nodes;
 };
@@ -669,12 +688,20 @@ public:
   ~Enum();
   /* string typeName; // by default int, just in case we enlarge integer types */
   vector<EnumAttribute*> attributes;
+  Class* clas;
+};
+
+
+class Names {
+public:
+  vector<string> names;
 };
 
 
 class Interface: public Type {
 public:
   Interface();
+  ~Interface();
 
   vector<FunctionDeclaration*> functions;
 };
@@ -683,10 +710,15 @@ public:
 class Class: public Type {
 public:
   Class();
+  ~Class();
 
   vector<string> superNames;
-  Type* superType;
+  Class* superClass = nullptr;
+  vector<Names*> interfaceNames;
   vector<Interface*> interfaces;
+  vector<Enum*> enums;
+  vector<FunctionDeclaration*> functionDeclarations;
+  Function* constructor = nullptr;
   vector<Function*> functions;
   vector<Variable*> variables;
   bool isVirtual = false;
@@ -706,6 +738,8 @@ public:
   bool isStyle;
   int weight;
   string name;
+  vector<string> names;
+  vector<string> externs;
   vector<Import*> imports;
   vector<Using*> usings;
   vector<Enum*> enums;
@@ -714,6 +748,13 @@ public:
   vector<Function*> functions;
   vector<Variable*> variables;
   vector<Class*> classes;
+};
+
+
+class Modules {
+public:
+  ~Modules();
+  vector<Module*> modules;
 };
 
 

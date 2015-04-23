@@ -241,9 +241,10 @@ TEST_F(ParserTest, parseEnum) {
 }
 
 
-// TODO: add function declarations
 TEST_F(ParserTest, parseInterface) {
-  file->content = "interface Foo { }";
+  file->content = "interface Foo {"
+    "object append(View view);"
+  "}";
 
   int lexerError = lexer.tokenize(file->content, file->tokens);
   int parserError = parser.parse(&module);
@@ -255,12 +256,24 @@ TEST_F(ParserTest, parseInterface) {
   Interface* interface = module.interfaces[0];
 
   ASSERT_THAT(interface->name, testing::Eq("Foo"));
+  ASSERT_THAT(interface->functions.size(), 1);
+  ASSERT_TRUE(interface->functions[0] != nullptr);
 }
 
 
-// TODO: add functions, variables
 TEST_F(ParserTest, parseClass) {
-  file->content = "class Foo extends hooli.SuperFoo {}";
+  file->content = "class Foo extends hooli.SuperFoo implements some.Fooable, some.Sortable {"
+  "  Foo() {}"
+  "  int count = 0;"
+  "  enum ItemType {"
+  "    first,"
+  "    second = 3,"
+  "  }"
+  "  object EventCallback(item a);"
+  "  tag checkStuff(ui.View view, float price) {"
+  "    return null;"
+  "  }"
+  "}";
   vector<string> superNames = {"hooli", "SuperFoo"};
 
   int lexerError = lexer.tokenize(file->content, file->tokens);
@@ -274,6 +287,22 @@ TEST_F(ParserTest, parseClass) {
 
   ASSERT_THAT(clas->name, testing::Eq("Foo"));
   ASSERT_THAT(clas->superNames, testing::Eq(superNames));
+  ASSERT_THAT(clas->interfaceNames.size(), 2);
+  ASSERT_TRUE(clas->interfaceNames[0] != nullptr);
+
+  Names* names1 = clas->interfaceNames[0];
+  vector<string> names1_names = {"some", "Fooable"};
+  Names* names2 = clas->interfaceNames[1];
+  vector<string> names2_names = {"some", "Sortable"};
+
+  ASSERT_THAT(names1->names, testing::Eq(names1_names));
+  ASSERT_THAT(names2->names, testing::Eq(names2_names));
+
+  ASSERT_TRUE(clas->constructor != nullptr);
+  ASSERT_THAT(clas->enums.size(), 1);
+  ASSERT_THAT(clas->functionDeclarations.size(), 1);
+  ASSERT_THAT(clas->functions.size(), 1);
+  ASSERT_THAT(clas->variables.size(), 1);
 }
 
 
@@ -604,50 +633,51 @@ TEST_F(ParserTest, parseTag) {
   ASSERT_TRUE(fn->nodes[0] != nullptr);
   ASSERT_THAT(fn->nodes[0]->code, Node::VARIABLE);
 
-  Variable* var = reinterpret_cast<Variable*>(fn->nodes[0]);
+  Variable* n_mainView = reinterpret_cast<Variable*>(fn->nodes[0]);
 
-  ASSERT_TRUE(var->node != nullptr);
-  ASSERT_THAT(var->node->code, Node::TAG);
+  ASSERT_TRUE(n_mainView->node != nullptr);
+  ASSERT_THAT(n_mainView->node->code, Node::TAG);
 
-  Tag* tag1 = reinterpret_cast<Tag*>(var->node);
-  vector<string> tag1Names = {"div"};
+  Tag* n_div = reinterpret_cast<Tag*>(n_mainView->node);
+  vector<string> n_divNames = {"div"};
 
-  ASSERT_THAT(tag1->names, testing::Eq(tag1Names));
-  ASSERT_THAT(tag1->childs.size(), 2);
-  ASSERT_TRUE(tag1->childs[0] != nullptr);
-  ASSERT_TRUE(tag1->childs[1] != nullptr);
-  ASSERT_TRUE(tag1->value == nullptr);
+  ASSERT_THAT(n_div->names, testing::Eq(n_divNames));
+  ASSERT_THAT(n_div->childs.size(), 2);
+  ASSERT_TRUE(n_div->childs[0] != nullptr);
+  ASSERT_TRUE(n_div->childs[1] != nullptr);
+  ASSERT_TRUE(n_div->value == nullptr);
 
-  Tag* tag2 = tag1->childs[0];
-  Tag* tag3 = tag1->childs[1];
-  vector<string> tag2Names = {"ui", "Dialog"};
-  vector<string> tag3Names = {"span"};
+  Tag* n_dialog = n_div->childs[0];
+  Tag* n_span = n_div->childs[1];
+  vector<string> n_dialogNames = {"ui", "Dialog"};
+  vector<string> n_spanNames = {"span"};
 
-  ASSERT_THAT(tag2->names, tag2Names);
-  ASSERT_THAT(tag2->childs.size(), 0);
-  ASSERT_TRUE(tag2->value == nullptr);
+  ASSERT_THAT(n_dialog->names, n_dialogNames);
+  ASSERT_THAT(n_dialog->childs.size(), 0);
+  ASSERT_TRUE(n_dialog->value == nullptr);
 
-  ASSERT_THAT(tag3->names, tag3Names);
-  ASSERT_THAT(tag3->childs.size(), 0);
-  ASSERT_TRUE(tag3->value != nullptr);
-  ASSERT_THAT(tag3->value->code, Node::STRING_LITERAL);
-  ASSERT_THAT(tag3->events.size(), 1);
-  ASSERT_TRUE(tag3->events[0] != nullptr);
-  ASSERT_THAT(tag3->props.size(), 1);
-  ASSERT_TRUE(tag3->props[0] != nullptr);
+  ASSERT_THAT(n_span->names, n_spanNames);
+  ASSERT_THAT(n_span->childs.size(), 0);
+  ASSERT_TRUE(n_span->value != nullptr);
+  ASSERT_THAT(n_span->value->code, Node::STRING_LITERAL);
+  ASSERT_THAT(n_span->events.size(), 1);
+  ASSERT_TRUE(n_span->events[0] != nullptr);
+  ASSERT_THAT(n_span->props.size(), 1);
+  ASSERT_TRUE(n_span->props[0] != nullptr);
 
-  StringLiteral* sl = reinterpret_cast<StringLiteral*>(tag3->value);
+  StringLiteral* n_span_value = reinterpret_cast<StringLiteral*>(n_span->value);
 
-  ASSERT_THAT(sl->value, testing::Eq("Some text"));
+  ASSERT_THAT(n_span_value->value, testing::Eq("Some text"));
 
-  TagEvent* ev1 = reinterpret_cast<TagEvent*>(tag3->events[0]);
+  TagEvent* ev1 = reinterpret_cast<TagEvent*>(n_span->events[0]);
   vector<string> ev1names = {"windowOnLoad"};
-  TagProp* prop1 = reinterpret_cast<TagProp*>(tag3->props[0]);
+  TagProp* prop1 = reinterpret_cast<TagProp*>(n_span->props[0]);
   vector<string> prop1names = {"style", "app"};
 
   ASSERT_THAT(ev1->name, testing::Eq("load"));
   ASSERT_TRUE(ev1->value != nullptr);
   ASSERT_THAT(ev1->value->code, Node::IDENTIFIER);
+
   ASSERT_THAT(prop1->name, testing::Eq("style"));
   ASSERT_TRUE(prop1->value != nullptr);
   ASSERT_THAT(prop1->value->code, Node::IDENTIFIER);

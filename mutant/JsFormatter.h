@@ -30,7 +30,7 @@ public:
   int formatStaticFunction(Function* fn);
   int formatClassFunction(Function* fn);
   int formatConstructor(Function* fn);
-  void formatFunctionParams(vector<FunctionParam*>& params);
+  void formatFunctionParams(vector<Variable*>& params);
 
   int formatEnum(Enum* en);
   int formatClass(Class* clas);
@@ -39,6 +39,7 @@ public:
   int formatCase(Case* cs);
   int formatFor(For* fr);
   int formatForEach(ForEach* fe);
+  int formatForIn(ForIn* fi);
   int formatWhile(While* wh);
   int formatBreak();
   int formatContinue();

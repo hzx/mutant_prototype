@@ -224,6 +224,21 @@ bool isOperatorNode(Node* node) {
 }
 
 
+bool isBlockNode(Node* node) {
+  switch (node->code) {
+    case Node::FUNCTION:
+    case Node::LAMBDA:
+    case Node::IF:
+    case Node::SWITCH:
+    case Node::FOR:
+    case Node::FOR_EACH:
+    case Node::WHILE:
+      return true;
+  }
+  return false;
+}
+
+
 bool isTagName(vector<string>& names) {
   if (names.size() != 1) return false;
 

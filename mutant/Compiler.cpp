@@ -12,39 +12,39 @@ Compiler::Compiler() {
 
 
 int Compiler::compile(vector<Module*>& modules) {
-  if (options.check() != 0) {
-    std::cout << "options error" << std::endl;
-    return options.error;
-  }
+  /* if (options.check() != 0) { */
+  /*   std::cout << "options error" << std::endl; */
+  /*   return options.error; */
+  /* } */
 
-  unique_ptr<Module> pmain(new Module());
-  auto main = pmain.get();
+  /* unique_ptr<Module> pmain(new Module()); */
+  /* auto main = pmain.get(); */
 
-  main->name = options.mainModule;
+  /* main->name = options.mainModule; */
   
-  if (!compileModule(main)) {
-    std::cout << "compile main module error" << std::endl;
-    return -1;
-  }
+  /* if (!compileModule(main)) { */
+  /*   std::cout << "compile main module error" << std::endl; */
+  /*   return -1; */
+  /* } */
 
-  modules.push_back(pmain.release());
+  /* modules.push_back(pmain.release()); */
 
-  if (!analyzer.process(modules, main)) {
-    std::cout << "analyze main module error" << std::endl;
-    return -1;
-  }
+  /* if (!analyzer.process(modules, main)) { */
+  /*   std::cout << "analyze main module error" << std::endl; */
+  /*   return -1; */
+  /* } */
 
-  if (!jsFormatter.format(modules, main)) {
-    std::cout << "save main module error" << std::endl;
-    return -1;
-  }
+  /* if (!jsFormatter.format(modules, main)) { */
+  /*   std::cout << "save main module error" << std::endl; */
+  /*   return -1; */
+  /* } */
 
   return 0;
 }
 
 
 int Compiler::compileModule(Module* module) {
-  string dir = loader.searchModuleDir(module->name);
+  string dir = loader.searchModuleDir(module->name, options.paths);
   if (dir.empty()) {
     std::cout << "module " << module->name << " directory not found" << std::endl;
     return -1;
@@ -52,7 +52,7 @@ int Compiler::compileModule(Module* module) {
 
   module->dir = dir;
 
-  loader.loadFiles(module);
+  loader.loadFiles(module, EXT_MUT, EXT_LENGTH);
   if (module->files.empty()) {
     std::cout << "module " << module->name << " empty, dir: " <<
       module->dir << std::endl;

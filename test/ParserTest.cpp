@@ -77,7 +77,7 @@ TEST_F(ParserTest, parseFunctionDeclaration) {
   ASSERT_THAT(fd->name, testing::Eq("TestView"));
   ASSERT_THAT(fd->params.size(), 1);
   
-  FunctionParam* param = fd->params[0];
+  Variable* param = fd->params[0];
   vector<string> paramTypeNames = {"View"};
 
   ASSERT_THAT(param->typeNames, testing::Eq(paramTypeNames));
@@ -101,9 +101,9 @@ TEST_F(ParserTest, parseFunction) {
   ASSERT_THAT(fn->returnTypeNames, testing::Eq(returnTypeNames));
   ASSERT_THAT(fn->params.size(), 2);
 
-  FunctionParam* param1 = fn->params[0];
+  Variable* param1 = fn->params[0];
   vector<string> param1Types = {"View"};
-  FunctionParam* param2 = fn->params[1];
+  Variable* param2 = fn->params[1];
   vector<string> param2Types = {"int"};
 
   ASSERT_THAT(param1->typeNames, testing::Eq(param1Types));
@@ -156,8 +156,8 @@ TEST_F(ParserTest, parseLambda) {
   ASSERT_THAT(lambda->returnTypeNames, testing::Eq(returnTypeNames));
   ASSERT_THAT(lambda->params.size(), 2);
 
-  FunctionParam* param1 = lambda->params[0];
-  FunctionParam* param2 = lambda->params[1];
+  Variable* param1 = lambda->params[0];
+  Variable* param2 = lambda->params[1];
 
   vector<string> param1names = {"auto"};
   vector<string> param2names = {"auto"};
@@ -426,8 +426,9 @@ TEST_F(ParserTest, parseIf) {
   ASSERT_THAT(ifn->condition->code, Node::EQUAL);
   ASSERT_THAT(ifn->nodes.size(), 1);
   ASSERT_THAT(ifn->nodes[0]->code, Node::IDENTIFIER);
-  ASSERT_THAT(ifn->elseNodes.size(), 1);
-  ASSERT_THAT(ifn->elseNodes[0]->code, Node::IDENTIFIER);
+  ASSERT_TRUE(ifn->else_ != nullptr);
+  ASSERT_THAT(ifn->else_->nodes.size(), 1);
+  ASSERT_THAT(ifn->else_->nodes[0]->code, Node::IDENTIFIER);
 }
 
 
@@ -469,7 +470,8 @@ TEST_F(ParserTest, parseSwitch) {
   ASSERT_THAT(case2->value->code, Node::STRING_LITERAL);
   ASSERT_THAT(case2->nodes.size(), 2);
 
-  ASSERT_THAT(sw->defNodes.size(), 2);
+  ASSERT_TRUE(sw->def != nullptr);
+  ASSERT_THAT(sw->def->nodes.size(), 2);
 }
 
 
@@ -542,6 +544,36 @@ TEST_F(ParserTest, parseForEach) {
   ASSERT_THAT(var->typeNames, testing::Eq(varTypeNames));
   ASSERT_THAT(var->name, testing::Eq("item"));
   ASSERT_THAT(id->names, testing::Eq(idNames));
+}
+
+
+TEST_F(ParserTest, parseForIn) {
+  file->content = "int main() {"
+  "  for auto item in items {"
+  "    test();"
+  "  }"
+  "}";
+
+  int lexerError = lexer.tokenize(file->content, file->tokens);
+  int parserError = parser.parse(&module);
+
+  ASSERT_THAT(lexerError, ERROR_OK);
+  ASSERT_THAT(parserError, ERROR_OK);
+  ASSERT_THAT(module.functions.size(), 1);
+
+  Function* func = module.functions[0];
+
+  ASSERT_THAT(func->nodes.size(), 1);
+  ASSERT_TRUE(func->nodes[0] != nullptr);
+  ASSERT_THAT(func->nodes[0]->code, Node::FOR_IN);
+
+  ForIn* fi = reinterpret_cast<ForIn*>(func->nodes[0]);
+
+  ASSERT_TRUE(fi->value != nullptr);
+  ASSERT_TRUE(fi->values != nullptr);
+  ASSERT_THAT(fi->nodes.size(), 1);
+  ASSERT_TRUE(fi->nodes[0] != nullptr);
+  ASSERT_THAT(fi->nodes[0]->code, Node::FUNCTION_CALL);
 }
 
 

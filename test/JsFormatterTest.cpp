@@ -219,8 +219,8 @@ TEST_F(JsFormatterTest, formatGlobalFunction) {
   f->returnTypeNames = {"view", "View"};
   f->name = "listen";
 
-  unique_ptr<FunctionParam> p1(new FunctionParam());
-  unique_ptr<FunctionParam> p2(new FunctionParam());
+  unique_ptr<Variable> p1(new Variable());
+  unique_ptr<Variable> p2(new Variable());
 
   p1->typeNames = {"ui", "Dialog"};
   p1->name = "dialog";
@@ -357,7 +357,8 @@ TEST_F(JsFormatterTest, formatSwitch) {
   c2->nodes.push_back(new Break());
   s->cases.push_back(c2.release());
 
-  s->defNodes.push_back(new Break());
+  s->def = new Case();
+  s->def->nodes.push_back(new Break());
 
   int error = formatter.formatSwitch(s.get());
   string actual = store.str();
@@ -455,6 +456,34 @@ TEST_F(JsFormatterTest, formatForEach) {
   f->nodes.push_back(id_s.release());
 
   int error = formatter.formatForEach(f.get());
+  string actual = store.str();
+
+  ASSERT_THAT(error, ERROR_OK);
+  ASSERT_THAT(actual, expected);
+}
+
+
+TEST_F(JsFormatterTest, formatForIn) {
+  string expected = "for (var name in dic) {\n"
+  "  test();\n"
+  "}\n";
+
+  unique_ptr<ForIn> forIn(new ForIn());
+
+  forIn->value = new Variable();
+  forIn->value->typeNames = {"auto"};
+  forIn->value->name = "name";
+
+  Identifier* dic = new Identifier();
+  dic->names = {"dic"};
+  forIn->values = dic;
+
+  FunctionCall* test = new FunctionCall();
+  test->names = {"test"};
+
+  forIn->nodes.push_back(test);
+
+  int error = formatter.formatForIn(forIn.get());
   string actual = store.str();
 
   ASSERT_THAT(error, ERROR_OK);
@@ -603,6 +632,8 @@ TEST_F(JsFormatterTest, formatTag) {
 
 
 TEST_F(JsFormatterTest, formatFunctionCall) {
+  string expected = "this.renderItem(mainView.items, foo)";
+
   unique_ptr<FunctionCall> n_call(new FunctionCall());
   n_call->names = {"this", "renderItem"};
 
@@ -615,9 +646,69 @@ TEST_F(JsFormatterTest, formatFunctionCall) {
   n_call->params.push_back(n_items.release());
   n_call->params.push_back(n_foo.release());
 
-  string expected = "this.renderItem(mainView.items, foo)";
-
   int error = formatter.formatFunctionCall(n_call.get());
+  string actual = store.str();
+
+  ASSERT_THAT(error, ERROR_OK);
+  ASSERT_THAT(actual, expected);
+}
+
+
+TEST_F(JsFormatterTest, formatLambda) {
+  string expected = "function(count) {\n"
+  "  return true;\n"
+  "}";
+
+  unique_ptr<BoolLiteral> n_true(new BoolLiteral());
+  n_true->value = true;
+
+  unique_ptr<Return> ret(new Return());
+  ret->node = n_true.release();
+
+  unique_ptr<Variable> count(new Variable());
+  count->typeNames = {"int"};
+  count->name = "count";
+
+  unique_ptr<Lambda> lambda(new Lambda());
+  lambda->nodes.push_back(ret.release());
+  lambda->params.push_back(count.release());
+
+  int error = formatter.formatLambda(lambda.get());
+  string actual = store.str();
+
+  ASSERT_THAT(error, ERROR_OK);
+  ASSERT_THAT(actual, expected);
+}
+
+
+TEST_F(JsFormatterTest, formatNew) {
+  string expected = "new Item(true)";
+
+  unique_ptr<BoolLiteral> n_true(new BoolLiteral());
+  n_true->value = true;
+
+  unique_ptr<New> n_new(new New());
+  n_new->names = {"Item"};
+  n_new->params.push_back(n_true.release());
+
+  int error = formatter.formatNew(n_new.get());
+  string actual = store.str();
+
+  ASSERT_THAT(error, ERROR_OK);
+  ASSERT_THAT(actual, expected);
+}
+
+
+TEST_F(JsFormatterTest, formatDelete) {
+  string expected = "delete item;\n";
+
+  unique_ptr<Identifier> item(new Identifier());
+  item->names = {"item"};
+
+  unique_ptr<Delete> del(new Delete());
+  del->node = item.release();
+
+  int error = formatter.formatDelete(del.get());
   string actual = store.str();
 
   ASSERT_THAT(error, ERROR_OK);

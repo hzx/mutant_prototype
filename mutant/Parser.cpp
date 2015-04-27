@@ -66,6 +66,10 @@ int Parser::parse(Module* module_) {
 
   int cursor, right, prev;
   for (File* file: module->files) {
+    unique_ptr<FileGroup> fileGroup(new FileGroup());
+    fileGroup->file = file;
+    this->fileGroup = fileGroup.get();
+
     tokens = &file->tokens;
     cursor = 0;
     right = tokens->size();
@@ -111,7 +115,10 @@ int Parser::parseGlobal(int left, int right) {
   if (token.word == "enum") {
     unique_ptr<Enum> en(new Enum());
     int error = parseEnum(en.get(), left + 1, right);
-    if (error >= 0) module->enums.push_back(en.release());
+    if (error >= 0) {
+      fileGroup->enums.push_back(en.get());
+      module->enums.push_back(en.release());
+    }
     return error;
   }
 
@@ -125,7 +132,10 @@ int Parser::parseGlobal(int left, int right) {
   if (token.word == "class") {
     unique_ptr<Class> clas(new Class());
     int error = parseClass(clas.get(), left + 1, right);
-    if (error >= 0) module->classes.push_back(clas.release());
+    if (error >= 0) {
+      fileGroup->classes.push_back(clas.get());
+      module->classes.push_back(clas.release());
+    }
     return error;
   }
 
@@ -136,14 +146,20 @@ int Parser::parseGlobal(int left, int right) {
       {
         unique_ptr<Variable> var(new Variable());
         int result = parseVariable(var.get(), left, right);
-        if (result >= 0) module->variables.push_back(var.release());
+        if (result >= 0) {
+          fileGroup->variables.push_back(var.get());
+          module->variables.push_back(var.release());
+        }
         return result;
       }
     case AIM_FUNCTION:
       {
         unique_ptr<Function> fn(new Function());
         int error = parseFunction(fn.get(), left, right);
-        if (error >= 0) module->functions.push_back(fn.release());
+        if (error >= 0) {
+          fileGroup->functions.push_back(fn.get());
+          module->functions.push_back(fn.release());
+        }
         return error;
       }
     case AIM_FUNCTION_DECLARATION:
@@ -387,7 +403,7 @@ int Parser::parseLambda(Lambda* lambda, int left, int right) {
 }
 
 
-int Parser::parseFunctionParams(vector<FunctionParam*>& params, int left, int right) {
+int Parser::parseFunctionParams(vector<Variable*>& params, int left, int right) {
   if (right - left == 0) return ERROR_OK;
 
   int paramRight = right;
@@ -396,7 +412,7 @@ int Parser::parseFunctionParams(vector<FunctionParam*>& params, int left, int ri
   while (cursor < right) {
     paramRight = findSymbol(',', cursor, right);
 
-    unique_ptr<FunctionParam> param(new FunctionParam());
+    unique_ptr<Variable> param(new Variable());
     paramType = parseNames(param->typeNames, cursor, paramRight);
     if (paramType < 0) return cursor; // contains error
     cursor = paramRight + 1;
@@ -1205,7 +1221,9 @@ int Parser::parseIf(If* ifn, int left, int right) {
     closeCurlyBracket = findPairCurlyBracket(openCurlyBracket, right);
     if (closeCurlyBracket == right) return ELSE_CLOSE_CURLY_BRACKET_ERROR;
 
-    error = parseNodes(ifn->elseNodes, openCurlyBracket + 1, closeCurlyBracket);
+    ifn->else_ = new Else();
+
+    error = parseNodes(ifn->else_->nodes, openCurlyBracket + 1, closeCurlyBracket);
     if (error < 0) return error;
   }
 
@@ -1245,7 +1263,8 @@ int Parser::parseSwitch(Switch* sw, int left, int right) {
 
       sw->cases.push_back(casen.release());
     } else if (word == DEFAULT_WORD) {
-      error = parseNodes(sw->defNodes, colon + 1, closeCurlyBracket);
+      sw->def = new Case();
+      error = parseNodes(sw->def->nodes, colon + 1, closeCurlyBracket);
       if (error < 0) return error;
     }
 
@@ -1337,6 +1356,35 @@ int Parser::parseForEach(ForEach* foreach, int left, int right) {
   if (error < 0) return error;
 
   return closeCurlyBracket + 1;
+}
+
+
+int Parser::parseForIn(ForIn* forin, int left, int right) {
+  int openBracket = findSymbol('{', left, right);
+  if (openBracket == right) return FOR_OPEN_CURLY_BRACKET_ERROR;
+  int closeBracket = findPairCurlyBracket(openBracket, right);
+  if (closeBracket == right) return FOR_CLOSE_CURLY_BRACKET_ERROR;
+
+  unique_ptr<Variable> var(new Variable());
+  int cursor = parseNames(var->typeNames, left, right);
+  if (cursor < 0) return cursor;
+  var->name = tokens->at(cursor).word;
+  ++cursor;
+
+  if (tokens->at(cursor).word != "in") return FORIN_IN_POSITION_ERROR;
+  ++cursor;
+
+  unique_ptr<Identifier> id(new Identifier());
+  cursor = parseNames(id->names, cursor, right);
+  if (cursor < 0) return cursor;
+
+  forin->value = var.release();
+  forin->values = id.release();
+
+  cursor = parseNodes(forin->nodes, openBracket + 1, closeBracket);
+  if (cursor < 0) return cursor;
+
+  return closeBracket + 1;
 }
 
 
@@ -1562,6 +1610,11 @@ int Parser::parseNodesOnce(vector<Node*>& nodes, int left, int right) {
       unique_ptr<ForEach> forEach(new ForEach());
       int error = parseForEach(forEach.get(), left + 1, right);
       if (error >= 0) nodes.push_back(forEach.release());
+      return error;
+    } else if (isForIn(left + 1, right)) {
+      unique_ptr<ForIn> forIn(new ForIn());
+      int error = parseForIn(forIn.get(), left + 1, right);
+      if (error >= 0) nodes.push_back(forIn.release());
       return error;
     } else {
       unique_ptr<For> forn(new For());
@@ -1852,6 +1905,7 @@ bool Parser::isExpression(int left, int right) {
       case '%':
       case '<':
       case '>':
+      case '!':
         return true;
     }
   }
@@ -1881,6 +1935,22 @@ bool Parser::isForEach(int left, int right) {
         return false;
       case ':': // only if we meet : until {
         return true;
+      case '{':
+        return false;
+    }
+  }
+  return false;
+}
+
+
+bool Parser::isForIn(int left, int right) {
+  for (; left < right; ++left) {
+    switch (tokens->at(left).word[0]) {
+      case ';':
+        return false;
+      case 'i': // only if we meet in until {
+        if (tokens->at(left).word == "in") return true;
+        break;
       case '{':
         return false;
     }

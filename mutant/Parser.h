@@ -24,7 +24,7 @@ public:
   int parseFunctionDeclaration(FunctionDeclaration* declaration, int left, int right);
   int parseFunction(Function* function, int left, int right);
   int parseLambda(Lambda* lambda, int left, int right);
-  int parseFunctionParams(vector<FunctionParam*>& params, int left, int right);
+  int parseFunctionParams(vector<Variable*>& params, int left, int right);
   int parseFunctionCall(FunctionCall* fc, int left, int right);
   int parseFunctionCallParams(vector<Node*>& params, int left, int right);
   int parseVariable(Variable* variable, int left, int right);
@@ -39,6 +39,7 @@ public:
   int parseForInit(For* forn, int left, int right);
   int parseForInc(For* forn, int left, int right);
   int parseForEach(ForEach* foreach, int left, int right);
+  int parseForIn(ForIn* forin, int left, int right);
   int parseWhile(While* wh, int left, int right);
   int parseReturn(Return* ret, int left, int right);
   int parseTagAttributes(Tag* tag, int left, int right);
@@ -57,6 +58,7 @@ public:
   bool isExpression(int left, int right);
   bool isVariable(int left, int right);
   bool isForEach(int left, int right);
+  bool isForIn(int left, int right);
   /* bool isWordLogicalOperator(string& word); */
   int detectGlobal(int left, int right);
   int detectNodes(int left, int right);
@@ -82,6 +84,7 @@ public:
   Module* module;
   vector<Token>* tokens = nullptr;
 
+  FileGroup* fileGroup;
   File* errorFile;
   int errorLine;
   int errorPos;

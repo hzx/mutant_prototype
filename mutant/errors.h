@@ -9,6 +9,7 @@ int const ERROR_FAIL = -1;
 char const S_UNKNOWN_ERROR[] = "unknown error";
 int const ERROR_OK = 0;
 char const S_ERROR_OK[] = "ok";
+int const LOADER_MODULE_PATH_NOT_DIR_ERROR = -500;
 int const LEXER_STRING_ERROR = -1001;
 char const S_LEXER_STRING_ERROR[] = "tokenize parseString error";
 int const LEXER_IDENTIFIER_ERROR = -1002;
@@ -87,6 +88,7 @@ int const PARSER_CLASS_PATTERN_ERROR = -2060;
 int const PARSE_EXTERN_IDENTIFIER_ERROR = -2061;
 int const CLASS_CONSTRUCTOR_NAME_ERROR = -2062;
 int const CLASS_CONSTRUCTOR_REDEFINITION_ERROR = -2063;
+int const FORIN_IN_POSITION_ERROR = -2064;
 int const NOT_OP_ERROR = -3000;
 int const BINARY_OR_ERROR = -3001;
 int const BINARY_AND_ERROR = -3002;
@@ -94,6 +96,8 @@ int const XOR_NOT_IMPLEMENTED_ERROR = -3003;
 int const JSFORMATTER_UKNOWN_NODE_ERROR = -4001;
 int const JSFORMATTER_MEMBER_VARIABLE_ERROR = -4002;
 int const JSFORMATTER_FOR_INIT_ERROR = -4003;
+int const ANALYZER_UNKNOWN_BLOCK_NODE = -5001;
+int const ANALYZER_UNKNOWN_RIGHT_NODE = -5002;
 
 
 #endif /* end of include guard: MUTANT_ERRORS_H */

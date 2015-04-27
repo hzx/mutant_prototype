@@ -5,6 +5,7 @@
 #include <fstream>
 #include <sstream>
 #include <errno.h>
+#include "errors.h"
 #include "Loader.h"
 #include "utils.h"
 
@@ -13,16 +14,18 @@ using std::memcmp;
 using std::strlen;
 using std::ostringstream;
 using std::ifstream;
+using std::cout;
+using std::endl;
 
 
 Loader::Loader() {
 }
 
 
-string Loader::searchModuleDir(string& name) {
+string Loader::searchModuleDir(string& name, vector<string>& paths) {
   string rel = nameToDir(name);
 
-  for (string& p: options->paths) {
+  for (string& p: paths) {
     string abs = joinPath(p, rel.c_str());
     if (existsPath(abs)) return abs;
   }
@@ -31,10 +34,56 @@ string Loader::searchModuleDir(string& name) {
 }
 
 
-void Loader::loadFiles(Module* module) {
+int Loader::detectModuleType(string& dirName) {
+  DIR* dir = opendir(dirName.c_str());
+  if (dir == nullptr) {
+    cout << "loader: cannot open dir: " << dirName << endl;
+    return LOADER_MODULE_PATH_NOT_DIR_ERROR;
+  }
+
+  struct dirent* cur;
+  size_t length;
+  size_t offset;
+
+  int moduleType = MODULE_UNKNOWN;
+
+  while ((cur = readdir(dir)) != nullptr) {
+    // skip if non regular file
+    if (cur->d_type != DT_REG) continue;
+    length = strlen(cur->d_name);
+
+    // appropriate name length
+    if (length > EXT_LENGTH) {
+      offset = length - EXT_LENGTH;
+
+      // check mut ext
+      if (memcmp(cur->d_name + offset, EXT_MUT, EXT_LENGTH) == 0) {
+        moduleType = MODULE_MUT;
+        break;
+        /* loadFile(module, cur->d_name); */
+        /* continue; */
+      }
+
+      // check mus ext
+      if (memcmp(cur->d_name + offset, EXT_MUS, EXT_LENGTH) == 0) {
+        moduleType = MODULE_MUS;
+        break;
+        /* module->isStyle = true; */
+        /* loadFile(module, cur->d_name); */
+        /* continue; */
+      }
+    }
+  }
+
+  closedir(dir);
+  return moduleType;
+}
+
+
+void Loader::loadFiles(BaseModule* module, const char ext[], const size_t extLength) {
   DIR* dir = opendir(module->dir.c_str());
   if (dir == nullptr) {
-    std::cout << "loader: cannot open dir: " << module->dir << std::endl;
+    cout << "loader: cannot open dir: " << module->dir << endl;
     return;
   }
 
@@ -51,15 +100,7 @@ void Loader::loadFiles(Module* module) {
     if (length > EXT_LENGTH) {
       offset = length - EXT_LENGTH;
 
-      // check mut ext
-      if (memcmp(cur->d_name + offset, EXT_MUT, EXT_LENGTH) == 0) {
-        loadFile(module, cur->d_name);
-        continue;
-      }
-
-      // check mus ext
-      if (memcmp(cur->d_name + offset, EXT_MUS, EXT_LENGTH) == 0) {
-        module->isStyle = true;
+      if (memcmp(cur->d_name + offset, ext, extLength) == 0) {
         loadFile(module, cur->d_name);
         continue;
       }
@@ -70,7 +111,7 @@ void Loader::loadFiles(Module* module) {
 }
 
 
-void Loader::loadFile(Module* module, const char* filename) {
+void Loader::loadFile(BaseModule* module, const char* filename) {
   auto file = new File();
   module->files.push_back(file);
 

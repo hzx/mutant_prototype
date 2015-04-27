@@ -20,10 +20,14 @@ const size_t EXT_LENGTH = 4;
 class Loader {
 public:
   Loader();
-  string searchModuleDir(string& name);
-  void loadFiles(Module* module);
-  void loadFile(Module* module, const char* filename);
+
+  string searchModuleDir(string& name, vector<string>& paths);
+  int detectModuleType(string& dir);
+  void loadFiles(BaseModule* module, const char ext[], const size_t extLength);
+  void loadFile(BaseModule* module, const char* filename);
   string nameToDir(string& name);
+  void loadModuleMut(Module* module);
+  void loadModuleMus(StyleModule* module);
 
   Options* options;
 };

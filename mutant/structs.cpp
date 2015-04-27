@@ -26,13 +26,48 @@ Type::Type(int code_, string name_) {
 }
 
 
-Nodes::~Nodes() {
-  for (auto node: nodes) delete node;
+VoidType::VoidType() {
+  code = Type::VOID;
 }
 
 
-Void::Void() {
-  code = Node::VOID;
+BoolType::BoolType() {
+  code = Type::BOOL;
+}
+
+
+IntType::IntType() {
+  code = Type::INT;
+}
+
+
+FloatType::FloatType() {
+  code = Type::FLOAT;
+}
+
+
+StringType::StringType() {
+  code = Type::STRING;
+}
+
+
+TagType::TagType() {
+  code = Type::TAG;
+}
+
+
+ObjectType::ObjectType() {
+  code = Type::OBJECT;
+}
+
+
+ExternType::ExternType() {
+  code = Type::EXTERN;
+}
+
+
+Nodes::~Nodes() {
+  for (auto node: nodes) delete node;
 }
 
 
@@ -528,12 +563,18 @@ If::If()
 If::~If() {
   delete condition;
   for (auto node: nodes) delete node;
-  for (auto node: elseNodes) delete node;
+  delete else_;
+}
+
+
+Else::~Else() {
+  for (auto node: nodes) delete node;
 }
 
 
 Case::Case()
     : value(nullptr) {
+  code = Node::CASE;
 }
 
 
@@ -552,7 +593,8 @@ Switch::Switch()
 Switch::~Switch() {
   delete value;
   for (auto cs: cases) delete cs;
-  for (auto dn: defNodes) delete dn;
+  /* for (auto dn: defNodes) delete dn; */
+  delete def;
 }
 
 
@@ -581,6 +623,18 @@ ForEach::~ForEach() {
   delete value;
   delete values;
   for (auto node: nodes) delete node;
+}
+
+
+ForIn::ForIn() {
+  code = Node::FOR_IN;
+}
+
+
+ForIn::~ForIn() {
+  delete value;
+  delete values;
+  for (auto n: nodes) delete n;
 }
 
 
@@ -651,18 +705,12 @@ Tag::~Tag() {
 }
 
 
-Import::Import()
-    : isExtern(false) {
+Import::Import() {
 }
 
 
 Using::Using() {
   type = nullptr;
-}
-
-
-FunctionParam::FunctionParam()
-    : type(nullptr) {
 }
 
 
@@ -737,8 +785,23 @@ Class::~Class() {
 }
 
 
+StyleClass::StyleClass() {
+  code = Type::STYLE_CLASS;
+}
+
+
+StyleClass::~StyleClass() {
+  for (auto prop: properties) delete prop;
+}
+
+
+BaseModule::~BaseModule() {
+  for (auto f: files) delete f;
+}
+
+
 Module::Module() {
-  weight = 0;
+  code = MODULE_MUT;
 }
 
 
@@ -750,7 +813,7 @@ Module::~Module() {
   for (auto c: classes) delete c;
   for (auto f: functions) delete f;
   for (auto v: variables) delete v;
-  for (auto f: files) delete f;
+  for (auto g: groups) delete g;
 }
 
 
@@ -761,6 +824,32 @@ File* Module::newFile() {
 }
 
 
-Modules::~Modules() {
+StyleModule::~StyleModule() {
+  code = MODULE_MUS;
+}
+
+
+Environment::Environment() {
+  voidType = new VoidType();
+  boolType = new BoolType();
+  intType = new IntType();
+  floatType = new FloatType();
+  stringType = new StringType();
+  tagType = new TagType();
+  objectType = new ObjectType();
+  externType = new ExternType();
+}
+
+
+Environment::~Environment() {
+  delete voidType;
+  delete boolType;
+  delete intType;
+  delete floatType;
+  delete stringType;
+  delete tagType;
+  delete objectType;
+  delete externType;
+  for (auto module: styles) delete module;
   for (auto module: modules) delete module;
 }

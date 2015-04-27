@@ -205,7 +205,7 @@ int JsFormatter::formatStaticFunction(Function* fn) {
 
 // bind functions with name__
 // in formatConstructor created function with
-// this.name = web.bind__(this, this.name__);
+// this.name = lang.bind(this, this.name__);
 int JsFormatter::formatClassFunction(Function* fn) {
   *store << fn->clas->name << ".prototype." << fn->name;
   if (fn->isBind) {
@@ -266,7 +266,7 @@ int JsFormatter::formatConstructor(Function* fn) {
     if (!fn->isBind) continue;
 
     storeIndent();
-    *store << "this." << fn->name << " = web.bind(this, this." << fn->name <<
+    *store << "this." << fn->name << " = lang.bind(this, this." << fn->name <<
       "__);\n";
   }
 
@@ -284,7 +284,7 @@ int JsFormatter::formatConstructor(Function* fn) {
 }
 
 
-void JsFormatter::formatFunctionParams(vector<FunctionParam*>& params) {
+void JsFormatter::formatFunctionParams(vector<Variable*>& params) {
   bool isFirst = true;
   for (auto param: params) {
     if (isFirst) {
@@ -374,18 +374,18 @@ int JsFormatter::formatClass(Class* clas) {
 }
 
 
-int JsFormatter::formatIf(If* ifn) {
+int JsFormatter::formatIf(If* if_) {
   storeIndent();
   *store << "if (";
 
-  int error = formatRightNode(ifn->condition);
+  int error = formatRightNode(if_->condition);
   if (error < 0) return error;
 
   *store << ") {\n";
 
   incIndent();
 
-  for (auto node: ifn->nodes) {
+  for (auto node: if_->nodes) {
     storeIndent();
     error = formatBlockNode(node);
     if (error < 0) return error;
@@ -393,6 +393,22 @@ int JsFormatter::formatIf(If* ifn) {
 
   decIndent();
 
+  if (if_->else_ != nullptr) {
+    storeIndent();
+    *store << "} else {\n";
+
+    incIndent();
+
+    for (auto node: if_->else_->nodes) {
+      storeIndent();
+      error = formatBlockNode(node);
+      if (error < 0) return error;
+    }
+
+    decIndent();
+  }
+
+  storeIndent();
   *store << "}\n";
 
   return ERROR_OK;
@@ -434,20 +450,32 @@ int JsFormatter::formatSwitch(Switch* sw) {
     }
   }
 
-
-  if (sw->defNodes.size() > 0) {
+  if (sw->def != nullptr) {
     storeIndent();
     *store << "default:\n";
     incIndent();
 
-    for (auto dnode: sw->defNodes) {
+    for (auto node: sw->def->nodes) {
       storeIndent();
-      error = formatBlockNode(dnode);
+      error = formatBlockNode(node);
       if (error < 0) return error;
     }
 
     decIndent();
   }
+  /* if (sw->defNodes.size() > 0) { */
+  /*   storeIndent(); */
+  /*   *store << "default:\n"; */
+  /*   incIndent(); */
+
+  /*   for (auto dnode: sw->defNodes) { */
+  /*     storeIndent(); */
+  /*     error = formatBlockNode(dnode); */
+  /*     if (error < 0) return error; */
+  /*   } */
+
+  /*   decIndent(); */
+  /* } */
 
   decIndent();
 
@@ -574,6 +602,31 @@ int JsFormatter::formatForEach(ForEach* fe) {
   decIndent();
 
   storeIndent();
+  *store << "}\n";
+
+  return ERROR_OK;
+}
+
+
+int JsFormatter::formatForIn(ForIn* fi) {
+  int error;
+
+  storeIndent();
+  *store << "for (var " << fi->value->name << " in ";
+  error = formatRightNode(fi->values);
+  if (error < 0) return error;
+  *store << ") {\n";
+
+  incIndent();
+
+  for (auto node: fi->nodes) {
+    storeIndent();
+    error = formatBlockNode(node);
+    if (error < 0) return error;
+  }
+
+  decIndent();
+
   *store << "}\n";
 
   return ERROR_OK;
@@ -731,13 +784,21 @@ int JsFormatter::formatTagChilds(vector<Tag*>& childs) {
 }
 
 
+// TODO: think about constructor call
 int JsFormatter::formatFunctionCall(FunctionCall* fc) {
   if (fc->isClassMember) {
     *store << "this.";
+    formatNames(fc->names);
+    *store << '(';
+  } else if (fc->isBaseCall) {
+    *store << fc->clas->name << ".base.";
+    formatNames(fc->names);
+    *store << ".call(this";
+    if (!fc->params.empty()) *store << ", ";
+  } else {
+    formatNames(fc->names);
+    *store << '(';
   }
-
-  formatNames(fc->names);
-  *store << '(';
 
   int error;
 
@@ -757,17 +818,58 @@ int JsFormatter::formatFunctionCall(FunctionCall* fc) {
 
 
 int JsFormatter::formatLambda(Lambda* lambda) {
+  *store << "function(";
+  formatFunctionParams(lambda->params);
+  *store << ") {\n";
+
+  incIndent();
+
+  int error;
+  for (auto node: lambda->nodes) {
+    storeIndent();
+    error = formatBlockNode(node);
+    if (error < 0) return error;
+  }
+
+  decIndent();
+
+  storeIndent();
+  *store << '}';
+
   return ERROR_OK;
 }
 
 
 int JsFormatter::formatNew(New* n) {
+  *store << "new ";
+  formatNames(n->names);
+  *store << '(';
+
+  int error;
+  bool isFirst = true;
+  for (auto param: n->params) {
+    if (isFirst) isFirst = false;
+    else *store << ", ";
+    error = formatRightNode(param);
+    if (error < 0) return error;
+  }
+
+  *store << ')';
+
   return ERROR_OK;
 }
 
 
 int JsFormatter::formatDelete(Delete* del) {
-  return ERROR_OK;
+  storeIndent();
+  *store << "delete ";
+
+  int error = formatRightNode(del->node);
+  if (error < 0) return error;
+
+  *store << ";\n";
+
+  return ERROR_OK;;
 }
 
 
@@ -810,6 +912,11 @@ int JsFormatter::formatIn(In* in) {
 
 int JsFormatter::formatIdentifier(Identifier* id) {
   formatNames(id->names);
+
+  if (id->isGlobal) {
+    *store << " = module__.";
+    formatNames(id->names);
+  }
 
   if (id->node != nullptr) {
     *store << " = ";
@@ -1280,7 +1387,9 @@ int JsFormatter::formatBlockNode(Node* node) {
     case Node::FUNCTION_CALL:
       {
         FunctionCall* n = reinterpret_cast<FunctionCall*>(node);
-        return formatFunctionCall(n);
+        int error = formatFunctionCall(n);
+        *store << ";\n";
+        return error;
       }
     case Node::INDEX:
       {

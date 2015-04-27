@@ -11,6 +11,8 @@
 #include "Analyzer.h"
 #include "JsFormatter.h"
 #include "AsmJsFormatter.h"
+#include "StyleParser.h"
+#include "StyleFormatter.h"
 #include "structs.h"
 
 
@@ -18,11 +20,17 @@ using std::string;
 using std::vector;
 
 
+/*
+ * in Modules (styles, modules) where to hold compiled modules
+ *
+ */
 class Compiler {
 public:
   Compiler();
   int compile(vector<Module*>& modules);
   int compileModule(Module* module);
+
+  // int compile target module
 
   Options options;
   Loader loader;
@@ -31,6 +39,8 @@ public:
   Analyzer analyzer;
   JsFormatter jsFormatter;
   AsmJsFormatter asmJsFormatter;
+  StyleParser styleParser;
+  StyleFormatter styleFormatter;
 };
 
 

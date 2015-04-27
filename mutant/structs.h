@@ -10,8 +10,8 @@ using std::string;
 using std::vector;
 
 
-class FunctionParam;
 class Function;
+class Variable;
 class Class;
 class Module;
 
@@ -31,6 +31,7 @@ public:
   string name;
   string absName;
   string content;
+  string hash;
   vector<Token> tokens;
 };
 
@@ -49,7 +50,9 @@ public:
     INTERFACE = 8,
     FUNCTION_DECLARATION = 9,
     CLASS = 10,
-    OBJECT = 11
+    STYLE_CLASS = 11,
+    OBJECT = 12,
+    EXTERN = 13
   };
 
   Type();
@@ -60,6 +63,54 @@ public:
   int weight;
   Module* module = nullptr;
   File* file = nullptr;
+};
+
+
+class VoidType: public Type {
+public:
+  VoidType();
+};
+
+
+class BoolType: public Type {
+public:
+  BoolType();
+};
+
+
+class IntType: public Type {
+public:
+  IntType();
+};
+
+
+class FloatType: public Type {
+public:
+  FloatType();
+};
+
+
+class StringType: public Type {
+public:
+  StringType();
+};
+
+
+class TagType: public Type {
+public:
+  TagType();
+};
+
+
+class ObjectType: public Type {
+public:
+  ObjectType();
+};
+
+
+class ExternType: public Type {
+public:
+  ExternType();
 };
 
 
@@ -115,17 +166,27 @@ public:
 
     IF = 45,
     SWITCH = 46,
-    FOR = 47,
-    FOR_EACH = 48,
-    WHILE = 49,
-    RETURN = 50,
-    BREAK = 51,
-    CONTINUE = 52,
-    TAG = 53
+    CASE = 47,
+    FOR = 48,
+    FOR_EACH = 49,
+    FOR_IN = 50,
+    WHILE = 51,
+    RETURN = 52,
+    BREAK = 53,
+    CONTINUE = 54,
+    TAG = 55
   };
 
   int code = 0;
   int priority = 1000000;
+  bool dontTouch = false;
+};
+
+
+class BlockNode: public Node {
+public:
+  BlockNode* parent = nullptr;
+  vector<Variable*> variables; // just links - free not need
 };
 
 
@@ -133,12 +194,6 @@ class Nodes {
 public:
   ~Nodes();
   vector<Node*> nodes;
-};
-
-
-class Void: public Node {
-public:
-  Void();
 };
 
 
@@ -211,6 +266,7 @@ public:
   Type* type = nullptr;
   Node* node = nullptr;
   bool isClassMember = false;
+  bool isGlobal = false;
 };
 
 
@@ -222,17 +278,20 @@ public:
   Function* function = nullptr;
   vector<Node*> params;
   Node* tail = nullptr;
+  bool isBaseCall = false;
+  Class* clas = nullptr; // need to base call
   bool isClassMember = false;
 };
 
 
-class Lambda: public Node {
+class Lambda: public BlockNode {
 public:
   Lambda();
   ~Lambda();
   vector<string> returnTypeNames;
   Type* returnType;
-  vector<FunctionParam*> params;
+  /* vector<FunctionParam*> params; */
+  vector<Variable*> params;
   vector<Node*> nodes;
 };
 
@@ -531,17 +590,26 @@ public:
 };
 
 
-class If: public Node {
+class Else: public BlockNode {
+public:
+  ~Else();
+  vector<Node*> nodes;
+};
+
+
+// TODO: refactor elseNodes
+class If: public BlockNode {
 public:
   If();
   ~If();
   Node* condition = nullptr;
   vector<Node*> nodes;
-  vector<Node*> elseNodes;
+  Else* else_ = nullptr;
+  /* vector<Node*> elseNodes; */
 };
 
 
-class Case {
+class Case: public BlockNode {
 public:
   Case();
   ~Case();
@@ -550,17 +618,19 @@ public:
 };
 
 
+// TODO: refactor defNodes
 class Switch: public Node {
 public:
   Switch();
   ~Switch();
   Node* value = nullptr;
   vector<Case*> cases;
-  vector<Node*> defNodes;
+  Case* def;
+  /* vector<Node*> defNodes; */
 };
 
 
-class For: public Node {
+class For: public BlockNode {
 public:
   For();
   ~For();
@@ -571,7 +641,7 @@ public:
 };
 
 
-class ForEach: public Node {
+class ForEach: public BlockNode {
 public:
   ForEach();
   ~ForEach();
@@ -581,7 +651,17 @@ public:
 };
 
 
-class While: public Node {
+class ForIn: public BlockNode {
+public:
+  ForIn();
+  ~ForIn();
+  Variable* value = nullptr;
+  Node* values = nullptr;
+  vector<Node*> nodes;
+};
+
+
+class While: public BlockNode {
 public:
   While();
   ~While();
@@ -646,7 +726,7 @@ public:
 
   vector<string> names;
   string alias;
-  bool isExtern;
+  /* bool isExtern; */
 };
 
 
@@ -660,27 +740,18 @@ public:
 };
 
 
-class FunctionParam {
-public:
-  FunctionParam();
-  vector<string> typeNames;
-  Type* type = nullptr;
-  string name;
-};
-
-
 class FunctionDeclaration: public Type {
 public:
   FunctionDeclaration();
 
   vector<string> returnTypeNames;
   Type* returnType;
-  vector<FunctionParam*> params;
+  vector<Variable*> params;
   Class* clas = nullptr;
 };
 
 
-class Function: public Node {
+class Function: public BlockNode {
 public:
   Function();
   ~Function();
@@ -688,7 +759,7 @@ public:
   vector<string> returnTypeNames;
   Type* returnType = nullptr;
   string name;
-  vector<FunctionParam*> params;
+  vector<Variable*> params;
   bool isConstructor = false;
   bool isOverride = false;
   bool isBind = false;
@@ -765,17 +836,69 @@ public:
 };
 
 
-class Module {
+class StyleImport {
+public:
+  vector<string> names;
+  string alias;
+};
+
+
+class StyleProperty {
+public:
+  string name;
+  string value;
+};
+
+
+class StyleClass: public Type {
+public:
+  StyleClass();
+  ~StyleClass();
+  vector<string> superNames;
+  StyleClass* superClass = nullptr;
+  vector<StyleProperty*> properties;
+};
+
+
+int const MODULE_UNKNOWN = 0;
+int const MODULE_MUT = 1;
+int const MODULE_MUS = 2;
+
+
+class BaseModule {
+public:
+  ~BaseModule();
+  int code = MODULE_UNKNOWN;
+  vector<File*> files;
+  string dir;
+  string name;
+  int weight = 0;
+};
+
+
+class FileGroup { // contains only links
+public:
+  File* file = nullptr;
+
+  size_t sortIndex = 0;
+
+  vector<Enum*> enums;
+  vector<Function*> functions;
+  vector<Variable*> variables;
+  vector<Class*> classes;
+  vector<FileGroup*> dependGroups;
+  /* vector<Enum*> dependEnums; */
+  /* vector<Function*> dependFunctions; */
+  /* vector<Variable*> dependVariables; */
+};
+
+
+class Module: public BaseModule {
 public:
   Module();
   ~Module();
   File* newFile();
 
-  vector<File*> files;
-  string dir;
-  bool isStyle;
-  int weight;
-  string name;
   vector<string> names;
   vector<string> externs;
   vector<Import*> imports;
@@ -786,12 +909,34 @@ public:
   vector<Function*> functions;
   vector<Variable*> variables;
   vector<Class*> classes;
+
+  vector<FileGroup*> groups;
 };
 
 
-class Modules {
+class StyleModule: public BaseModule {
 public:
-  ~Modules();
+  ~StyleModule();
+  vector<StyleImport*> imports;
+  vector<StyleClass*> classes;
+};
+
+
+class Environment {
+public:
+  Environment();
+  ~Environment();
+
+  VoidType* voidType;
+  BoolType* boolType;
+  IntType* intType;
+  FloatType* floatType;
+  StringType* stringType;
+  TagType* tagType;
+  ObjectType* objectType;
+  ExternType* externType;
+
+  vector<StyleModule*> styles;
   vector<Module*> modules;
 };
 

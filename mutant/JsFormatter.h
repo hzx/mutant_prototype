@@ -16,8 +16,12 @@ class JsFormatter {
 public:
   JsFormatter();
 
+  int formatFileGroup(FileGroup* group);
   int formatModule(Module* module, ostream& store);
+  int formatStyleFileGroup(StyleFileGroup* group);
+  int formatStyleModule(StyleModule* module, ostream& store);
   int formatImport(Import* import);
+  int formatStyleImport(StyleImport* import);
   int formatUsing(Using* usingn);
 
   int formatGlobalVariable(Variable* var);
@@ -34,6 +38,8 @@ public:
 
   int formatEnum(Enum* en);
   int formatClass(Class* clas);
+  int formatStyleClass(StyleClass* clas);
+  int formatStyleProperty(StyleProperty* prop);
   int formatIf(If* ifn);
   int formatSwitch(Switch* sw);
   int formatCase(Case* cs);

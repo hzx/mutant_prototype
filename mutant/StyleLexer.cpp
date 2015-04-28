@@ -1,13 +1,7 @@
-#include <iostream>
-#include <sstream>
-#include <locale>
-#include "Lexer.h"
+#include "StyleLexer.h"
 
 
-using std::ostringstream;
-
-
-int Lexer::tokenize(string& source_, vector<Token>& tokens) {
+int StyleLexer::tokenize(string& source_, vector<Token>& tokens) {
   source = &source_;
   right = source_.length();
 
@@ -22,10 +16,10 @@ int Lexer::tokenize(string& source_, vector<Token>& tokens) {
       case ' ': // skip spice
         ++left;
         continue;
-      case '/': // skip comments or divide symbol
-        symbol= getNext(left);
+      case '/': // skip comments
+        symbol = getNext(left);
         switch (symbol) {
-          case '/': // one line comment, ignore all to the line end
+          case '/': // one line commen, ignore all to the line end
             cursor = find('\n', left + 1);
             left = cursor >= 0 ? cursor : right;
             break;
@@ -34,36 +28,26 @@ int Lexer::tokenize(string& source_, vector<Token>& tokens) {
             if (cursor < 0) return cursor;
             left = cursor;
             break;
-          default:
-            // add divide symbol to tokens
-            tokens.push_back(Token(lineNumber, 0, "/"));
-            ++left;
+          default: // url
+            // TODO: parseUrl
+            break;
         }
         break;
 
-      case '[':
-      case ']':
       case '{':
       case '}':
       case '(':
       case ')':
-      case '*':
-      case '+':
-      case '-':
-      case '>':
-      case '<':
-      case '=':
-      case '.':
-      case ',':
       case ';':
       case ':':
-      case '?':
-      case '!': // add special symbols: []{}()*+-><=.,;:?!
+      case '.':
+      case ',':
+        // add symbol
         tokens.push_back(Token(lineNumber, 0, source_.substr(left, 1)));
         ++left;
         break;
 
-      case '"': // add string literal
+      case '"': // string literal
         cursor = parseString(left + 1);
         if (cursor < 0) return cursor;
 
@@ -141,7 +125,14 @@ int Lexer::tokenize(string& source_, vector<Token>& tokens) {
       case '7':
       case '8':
       case '9': // add number
-        cursor = parseNumber(left + 1);
+        cursor = parseNumberValue(left + 1);
+        if (cursor < 0) return cursor;
+
+        tokens.push_back(Token(lineNumber, 0, source_.substr(left, cursor - left)));
+        left = cursor;
+        break;
+      case '#':
+        cursor = parseColor(left + 1);
         if (cursor < 0) return cursor;
 
         tokens.push_back(Token(lineNumber, 0, source_.substr(left, cursor - left)));
@@ -154,7 +145,7 @@ int Lexer::tokenize(string& source_, vector<Token>& tokens) {
         ++left;
         break;
 
-      case '\0':
+      case '\0': // end of source
         return ERROR_OK;
 
       default: // unknown symbol
@@ -166,12 +157,12 @@ int Lexer::tokenize(string& source_, vector<Token>& tokens) {
 }
 
 
-char Lexer::getNext(int left) {
+char StyleLexer::getNext(int left) {
   return left + 1 < right ? source->at(left + 1) : '\0';
 }
 
 
-int Lexer::find(char c, int left) {
+int StyleLexer::find(char c, int left) {
   if (left >= right) return ERROR_FAIL;
 
   for (int i = left; i < right; ++i) {
@@ -182,7 +173,7 @@ int Lexer::find(char c, int left) {
 }
 
 
-int Lexer::findMultiCommentEnd(int left) {
+int StyleLexer::findMultiCommentEnd(int left) {
   char symbol;
   for (;;) {
     left = find('*', left);
@@ -197,13 +188,22 @@ int Lexer::findMultiCommentEnd(int left) {
 }
 
 
-int Lexer::parseIdentifier(int left) {
+int StyleLexer::parseIdentifier(int left) {
   char symbol;
+  bool slashEncounter = false;
   for (;;) {
     if (left >= right) return right;
 
     symbol = source->at(left);
     switch (symbol) {
+      case '.': // TODO: refactor . and url identifiers
+        if (!slashEncounter) return left; // is not url
+        ++left;
+        break;
+      case '/':
+        slashEncounter = true;
+        ++left;
+        break;
       case 'a':
       case 'b':
       case 'c':
@@ -257,6 +257,7 @@ int Lexer::parseIdentifier(int left) {
       case 'Y':
       case 'Z':
       case '_':
+      case '-':
       case '0':
       case '1':
       case '2':
@@ -278,7 +279,7 @@ int Lexer::parseIdentifier(int left) {
 }
 
 
-int Lexer::parseNumber(int left) {
+int StyleLexer::parseNumberValue(int left) {
   char symbol;
   bool haveDot = false;
   for (;;) {
@@ -299,8 +300,6 @@ int Lexer::parseNumber(int left) {
       case '7':
       case '8':
       case '9':
-        ++left;
-        break;
       case 'a':
       case 'b':
       case 'c':
@@ -353,8 +352,9 @@ int Lexer::parseNumber(int left) {
       case 'X':
       case 'Y':
       case 'Z':
-      case '_':
-        return LEXER_IDENTIFIER_ERROR;
+      case '%':
+        ++left;
+        break;
       default:
         return left;
     }
@@ -364,9 +364,10 @@ int Lexer::parseNumber(int left) {
 }
 
 
-int Lexer::parseString(int left) {
+int StyleLexer::parseString(int left) {
   char prev = ' '; // prev for escape sequences
   char symbol;
+
   for (;;) {
     if (left >= right) return LEXER_STRING_ERROR;
 
@@ -376,7 +377,7 @@ int Lexer::parseString(int left) {
         if (prev == '\\') symbol = ' '; // for prev reset
         break;
       case '"':
-        if (prev != '\\') return left + 1;
+        if (prev !=  '\\') return left + 1;
         break;
       case '\0':
       case '\n':
@@ -388,4 +389,44 @@ int Lexer::parseString(int left) {
   }
 
   return LEXER_STRING_NOT_CLOSED;
+}
+
+
+int StyleLexer::parseColor(int left) {
+  char symbol;
+  for (;;) {
+    if (left >= right) return right;
+
+    symbol = source->at(left);
+    switch (symbol) {
+      case '0':
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+      case '6':
+      case '7':
+      case '8':
+      case '9':
+      case 'a':
+      case 'b':
+      case 'c':
+      case 'd':
+      case 'e':
+      case 'f':
+      case 'A':
+      case 'B':
+      case 'C':
+      case 'D':
+      case 'E':
+      case 'F':
+        ++left;
+        break;
+      default: // TODO: refactor - break only on symbols, otherwise error
+        return left;
+    }
+  }
+
+  return ERROR_FAIL;
 }

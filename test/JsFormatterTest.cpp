@@ -31,7 +31,7 @@ TEST_F(JsFormatterTest, formatModule) {
 
   string expected = "(function() {\n"
   "var module__ = {};\n\n"
-  "wr.modules__.osd.ui = module__;\n"
+  "mutant.register__([\"osd\", \"ui\"], module__);\n"
   "})();\n";
 
   int error = formatter.formatModule(&module, store);
@@ -42,14 +42,46 @@ TEST_F(JsFormatterTest, formatModule) {
 }
 
 
+TEST_F(JsFormatterTest, formatStyleModule) {
+  string expected = "(function() {\n"
+  "var module__ = {};\n\n"
+  "mutant.register__([\"osd\", \"ui\"], module__);\n"
+  "})();\n";
+
+  StyleModule module;
+  module.names = {"osd", "ui"};
+
+  int error = formatter.formatStyleModule(&module, store);
+  string actual = store.str();
+
+  ASSERT_THAT(error, ERROR_OK);
+  ASSERT_THAT(actual, expected);
+}
+
+
 TEST_F(JsFormatterTest, formatImport) {
+  string expected = "var dom = mutant.foo.dom;\n";
+
   unique_ptr<Import> import(new Import());
   import->names = {"foo", "dom"};
   import->alias = "dom";
 
-  string expected = "var dom = wr.modules__.foo.dom;\n";
-
   int error = formatter.formatImport(import.get());
+  string actual = store.str();
+
+  ASSERT_THAT(error, ERROR_OK);
+  ASSERT_THAT(actual, expected);
+}
+
+
+TEST_F(JsFormatterTest, formatStyleImport) {
+  string expected = "var ui = mutant.foo.ui;\n";
+
+  unique_ptr<StyleImport> import(new StyleImport());
+  import->names = {"foo", "ui"};
+  import->alias = "ui";
+
+  int error = formatter.formatStyleImport(import.get());
   string actual = store.str();
 
   ASSERT_THAT(error, ERROR_OK);
@@ -211,6 +243,9 @@ TEST_F(JsFormatterTest, formatBlockVariable) {
 }
 
 
+// TODO: add formatBlockVariableDeclaration
+
+
 TEST_F(JsFormatterTest, formatGlobalFunction) {
   string expected = "var listen = module__.listen = function(dialog, count) {\n"
   "};\n";
@@ -281,7 +316,7 @@ TEST_F(JsFormatterTest, formatStaticFunction) {
 TEST_F(JsFormatterTest, formatClass) {
   string expected = "var Foo = module__.Foo = function() {\n"
   "};\n"
-  "web.extend(Foo, ui.Dialog);\n";
+  "mutant.extends__(Foo, ui.Dialog);\n";
 
   unique_ptr<Function> fn(new Function());
   fn->name = "Foo";
@@ -293,6 +328,37 @@ TEST_F(JsFormatterTest, formatClass) {
   c->constructor = fn.release();
 
   int error = formatter.formatClass(c.get());
+  string actual = store.str();
+
+  ASSERT_THAT(error, ERROR_OK);
+  ASSERT_THAT(actual, expected);
+}
+
+
+TEST_F(JsFormatterTest, formatStyleClass) {
+  string expected = R"(var app = module__.app = {
+  padding: "8px 4px";
+  background: "url(\"img/image.png\") left top transparent no-repeat";
+};
+mutant.augment__(app, baseApp);
+)";
+
+  unique_ptr<StyleClass> clas(new StyleClass());
+  clas->name = "app";
+  clas->superNames = {"baseApp"};
+
+  StyleProperty* prop1 = new StyleProperty();
+  prop1->name = "padding";
+  prop1->values = {"8px", "4px"};
+
+  StyleProperty* prop2 = new StyleProperty();
+  prop2->name = "background";
+  prop2->values = {"url", "(", "\"img/image.png\"", ")", "left", "top", "transparent", "no-repeat"};
+  
+  clas->properties.push_back(prop1);
+  clas->properties.push_back(prop2);
+
+  int error = formatter.formatStyleClass(clas.get());
   string actual = store.str();
 
   ASSERT_THAT(error, ERROR_OK);

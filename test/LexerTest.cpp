@@ -11,13 +11,8 @@ using std::vector;
 
 class LexerTest: public testing::Test {
 public:
-  LexerTest();
   Lexer lexer;
 };
-
-
-LexerTest::LexerTest() {
-}
 
 
 TEST_F(LexerTest, tokenizeString) {
@@ -28,6 +23,7 @@ TEST_F(LexerTest, tokenizeString) {
 
   int error = lexer.tokenize(source, tokens);
   tokensToWords(tokens, actual);
+
   ASSERT_THAT(error, ERROR_OK);
   ASSERT_THAT(actual, testing::Eq(expected));
 }
@@ -60,6 +56,7 @@ TEST_F(LexerTest, tokenizeSymbols) {
 
   int error = lexer.tokenize(source, tokens);
   tokensToWords(tokens, actual);
+
   ASSERT_THAT(error, ERROR_OK);
   ASSERT_THAT(actual, testing::Eq(expected));
 }
@@ -106,11 +103,11 @@ TEST_F(LexerTest, tokenizeInt) {
   vector<string> actual;
   vector<Token> tokens;
 
-
   int error = lexer.tokenize(source, tokens);
   tokensToWords(tokens, actual);
-  ASSERT_THAT(actual, testing::Eq(expected));
+
   ASSERT_THAT(error, ERROR_OK);
+  ASSERT_THAT(actual, testing::Eq(expected));
 }
 
 

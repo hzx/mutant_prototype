@@ -28,15 +28,16 @@ ParserTest::ParserTest() {
 
 TEST_F(ParserTest, parseImport) {
   file->content = "import osd.wr as wr;";
-  int lexerError = lexer.tokenize(file->content, file->tokens);
-  int parserError = parser.parse(&module);
-  vector<string> names = {"osd", "wr"};
 
+  int lexerError = lexer.tokenize(file->content, file->tokens);
   ASSERT_THAT(lexerError, ERROR_OK);
+
+  int parserError = parser.parse(&module);
   ASSERT_THAT(parserError, ERROR_OK);
   ASSERT_THAT(module.imports.size(), 1);
 
   Import* import = module.imports[0];
+  vector<string> names = {"osd", "wr"};
 
   ASSERT_THAT(import->names, testing::Eq(names));
   ASSERT_THAT(import->alias, testing::Eq("wr"));
@@ -45,10 +46,12 @@ TEST_F(ParserTest, parseImport) {
 
 TEST_F(ParserTest, parseUsing) {
   file->content = "using engine.Block as Block;";
+
   int lexerError = lexer.tokenize(file->content, file->tokens);
+  ASSERT_THAT(lexerError, ERROR_OK);
+
   int parserError = parser.parse(&module);
 
-  ASSERT_THAT(lexerError, ERROR_OK);
   ASSERT_THAT(parserError, ERROR_OK);
   ASSERT_THAT(module.usings.size(), 1);
 

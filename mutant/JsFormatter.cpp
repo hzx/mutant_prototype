@@ -4,9 +4,64 @@
 
 char INDENT_SPACES[] = "  ";
 
+char MUTANT_SYSTEM_JS[] = R"(
+window.mutant = window.mutant || {};
+
+mutant.register__ = function(names, module) {
+  for (var i = 0; i < names.length - 1; ++i)
+    if (!(names[i] in mutant)) mutant[names[i]] = {};
+  mutant[names[names.length - 1]] = module;
+};
+
+mutant.extends__ = function(child, base) {
+  var tmp = new Function();
+  tmp.prototype = base.prototype;
+  child.prototype = new tmp();
+  child.prototype.constructor = child;
+  child.base = base.prototype;
+};
+
+mutant.augment__ = function(dest, src) {
+  for (name in src) dest[name] = src[name];
+}
+
+mutant.bind__ = function(context, func) {
+  return function() {
+    return func.apply(context, arguments);
+  };
+};
+)";
+
 
 JsFormatter::JsFormatter()
     : store(nullptr) {
+}
+
+
+int JsFormatter::formatFileGroup(FileGroup* group) {
+  int error;
+
+  for (auto en: group->enums) {
+    error = formatEnum(en);
+    if (error < 0) return error;
+  }
+
+  for (auto fn: group->functions) {
+    error = formatGlobalFunction(fn);
+    if (error < 0) return error;
+  }
+
+  for (auto var: group->variables) {
+    error = formatGlobalVariable(var);
+    if (error < 0) return error;
+  }
+
+  for (auto clas: group->classes) {
+    error = formatClass(clas);
+    if (error < 0) return error;
+  }
+
+  return ERROR_OK;
 }
 
 
@@ -31,42 +86,82 @@ int JsFormatter::formatModule(Module* module, ostream& store_) {
     error = formatUsing(us);
     if (error < 0) return error;
   }
-  // enums
-  for (auto en: module->enums) {
-    error = formatEnum(en);
-    if (error < 0) return error;
-  }
-  // functions
-  for (auto fn: module->functions) {
-    error = formatGlobalFunction(fn);
-    if (error < 0) return error;
-  }
-  // variables
-  for (auto var: module->variables) {
-    error = formatGlobalVariable(var);
-    if (error < 0) return error;
-  }
-  // classes
-  for (auto clas: module->classes) {
-    error = formatClass(clas);
+
+  for (auto group: module->groups) {
+    error = formatFileGroup(group);
     if (error < 0) return error;
   }
   
-  store_ << "wr.modules__";
-  for (string& name: module->names)
-    store_ << '.' << name;
-  store_ << " = module__;\n"
-    << "})();\n";
+  store_ << "mutant.register__([";
+  bool isFirst = true;
+  for (string& name: module->names) {
+    if (isFirst) isFirst = false;
+    else store_ << ", ";
+    store_ << '"' <<  name << '"';
+  }
+  store_ << "], module__);\n})();\n";
+
+  return ERROR_OK;
+}
+
+
+int JsFormatter::formatStyleFileGroup(StyleFileGroup* group) {
+  int error;
+
+  for (auto clas: group->classes) {
+    error = formatStyleClass(clas);
+    if (error < 0) return error;
+  }
+
+  return ERROR_OK;
+}
+
+
+int JsFormatter::formatStyleModule(StyleModule* module, ostream& store) {
+  this->store = &store;
+
+  store << "(function() {\n"
+    << "var module__ = {};\n\n";
+
+  int error;
+  // TODO: add variables here
+
+  for (auto group: module->groups)  {
+    error = formatStyleFileGroup(group);
+    if (error < 0) return error;
+  }
+
+  store << "mutant.register__([";
+  bool isFirst = true;
+  for (string& name: module->names) {
+    if (isFirst) isFirst = false;
+    else store << ", ";
+    store << '"' << name << '"';
+  }
+  store << "], module__);\n";
+
+  store << "})();\n";
 
   return ERROR_OK;
 }
 
 
 int JsFormatter::formatImport(Import* import) {
-  *store << "var " << import->alias << " = wr.modules__";
+  *store << "var " << import->alias << " = mutant";
   for (string& name: import->names)
     *store << '.' << name;
   *store << ";\n";
+
+  return ERROR_OK;
+}
+
+
+int JsFormatter::formatStyleImport(StyleImport* import) {
+  *store << "var " << import->alias << " = mutant";
+  for (string& name: import->names)
+    *store << '.' << name;
+  *store << ";\n";
+
   return ERROR_OK;
 }
 
@@ -266,8 +361,8 @@ int JsFormatter::formatConstructor(Function* fn) {
     if (!fn->isBind) continue;
 
     storeIndent();
-    *store << "this." << fn->name << " = lang.bind(this, this." << fn->name <<
-      "__);\n";
+    *store << "this." << fn->name << " = mutant.bind__(this, this." << fn->name
+      << "__);\n";
   }
 
   for (auto node: fn->nodes) {
@@ -343,7 +438,7 @@ int JsFormatter::formatClass(Class* clas) {
   int error = formatConstructor(clas->constructor);
   if (error < 0) return error;
   if (clas->superNames.size() > 0) {
-    *store << "web.extend(" << clas->name << ", ";
+    *store << "mutant.extends__(" << clas->name << ", ";
     formatNames(clas->superNames);
     *store << ");\n";
   }
@@ -369,6 +464,54 @@ int JsFormatter::formatClass(Class* clas) {
     }
     if (error < 0) return error;
   }
+
+  return ERROR_OK;
+}
+
+
+int JsFormatter::formatStyleClass(StyleClass* clas) {
+  *store << "var " << clas->name << " = module__."
+    << clas->name << " = {\n";
+
+  incIndent();
+
+  int error;
+  for (auto prop: clas->properties) {
+    storeIndent();
+    error = formatStyleProperty(prop);
+    if (error < 0) return error;
+  }
+
+  decIndent();
+
+  *store << "};\n";
+  if (!clas->superNames.empty()) {
+    *store << "mutant.augment__(" << clas->name << ", ";
+    formatNames(clas->superNames);
+    *store << ");\n";
+  }
+
+  return ERROR_OK;
+}
+
+
+int JsFormatter::formatStyleProperty(StyleProperty* prop) {
+  bool isFirst = true;
+  string prev = " ";
+  *store << prop->name << ": \"";
+  for (auto value: prop->values) {
+    if (isFirst) isFirst = false;
+    else {
+      if (value[0] != '(' and prev[0] != '(' and value[0] != ')')
+        *store << ' ';
+    }
+    if (value[0] == '"') {
+      // escape quotes
+      *store << "\\\"" << value.substr(1, value.length()-2) << "\\\"";
+    } else *store << value;
+    prev = value;
+  }
+  *store << "\";\n";
 
   return ERROR_OK;
 }

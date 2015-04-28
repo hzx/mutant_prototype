@@ -81,7 +81,7 @@ public:
   string& getPrevTokenWord(int left, int cursor);
   string& getNextTokenWord(int right, int cursor);
 
-  Module* module;
+  Module* module = nullptr;
   vector<Token>* tokens = nullptr;
 
   FileGroup* fileGroup;

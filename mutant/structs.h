@@ -13,6 +13,8 @@ using std::vector;
 class Function;
 class Variable;
 class Class;
+class BaseModule;
+class StyleModule;
 class Module;
 
 
@@ -726,6 +728,7 @@ public:
 
   vector<string> names;
   string alias;
+  BaseModule* module = nullptr;
   /* bool isExtern; */
 };
 
@@ -840,13 +843,14 @@ class StyleImport {
 public:
   vector<string> names;
   string alias;
+  StyleModule* module = nullptr;
 };
 
 
 class StyleProperty {
 public:
   string name;
-  string value;
+  vector<string> values;
 };
 
 
@@ -857,22 +861,6 @@ public:
   vector<string> superNames;
   StyleClass* superClass = nullptr;
   vector<StyleProperty*> properties;
-};
-
-
-int const MODULE_UNKNOWN = 0;
-int const MODULE_MUT = 1;
-int const MODULE_MUS = 2;
-
-
-class BaseModule {
-public:
-  ~BaseModule();
-  int code = MODULE_UNKNOWN;
-  vector<File*> files;
-  string dir;
-  string name;
-  int weight = 0;
 };
 
 
@@ -893,13 +881,43 @@ public:
 };
 
 
+class StyleFileGroup { // contains only links
+public:
+  File* file = nullptr;
+
+  size_t sortIndex = 0;
+
+  /* vector<StyleVariable*> variables; */
+  vector<StyleClass*> classes;
+  vector<StyleFileGroup*> dependGroups;
+};
+
+
+int const MODULE_UNKNOWN = 0;
+int const MODULE_MUT = 1;
+int const MODULE_MUS = 2;
+
+
+class BaseModule {
+public:
+  ~BaseModule();
+  int code = MODULE_UNKNOWN;
+  vector<File*> files;
+  string dir;
+  string name; // TODO: clear dont need?!
+  vector<string> names;
+
+  size_t sortIndex = 0;
+};
+
+
 class Module: public BaseModule {
 public:
   Module();
   ~Module();
   File* newFile();
 
-  vector<string> names;
+  vector<FileGroup*> groups;
   vector<string> externs;
   vector<Import*> imports;
   vector<Using*> usings;
@@ -909,14 +927,13 @@ public:
   vector<Function*> functions;
   vector<Variable*> variables;
   vector<Class*> classes;
-
-  vector<FileGroup*> groups;
 };
 
 
 class StyleModule: public BaseModule {
 public:
   ~StyleModule();
+  vector<StyleFileGroup*> groups;
   vector<StyleImport*> imports;
   vector<StyleClass*> classes;
 };

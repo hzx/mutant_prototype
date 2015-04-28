@@ -77,6 +77,7 @@ public:
   int processBlockNode(Node* node);
   int processRightNode(Node* node);
   int sortModuleGroups(Module* module);
+  int sortStyleModuleGroups(StyleModule* module);
 
   bool isBaseName(vector<string>& names);
   bool isLocalName(string& name);

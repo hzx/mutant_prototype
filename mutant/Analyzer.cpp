@@ -1057,6 +1057,41 @@ int Analyzer::sortModuleGroups(Module* module) {
 }
 
 
+int sortStyleModuleGroups(StyleModule* module) {
+  StyleFileGroup* group;
+  vector<StyleFileGroup*> sorted;
+  size_t tmp;
+  // initialize groups indexes and push initial sorted
+  for (size_t g = 0; g < module->groups.size(); ++g) {
+    group = module->groups[g];
+    group->sortIndex = g;
+    sorted.push_back(group);
+  }
+
+  for (size_t g = 0; g < module->groups.size(); ++g) {
+    group = module->groups[g];
+    if (not group->dependGroups.empty()) {
+      // move dependGroup before this group
+      for (auto dependGroup: group->dependGroups) {
+        if (group->sortIndex < dependGroup->sortIndex) { // swap groups
+          tmp = group->sortIndex;
+          group->sortIndex = dependGroup->sortIndex;
+          dependGroup->sortIndex = tmp;
+          sorted[tmp] = dependGroup;
+          sorted[group->sortIndex] = group;
+        }
+      }
+    }
+  }
+
+  // copy sorted to groups
+  for (size_t g = 0; g < module->groups.size(); ++g)
+    module->groups[g] = sorted[g];
+
+  return ERROR_OK;
+}
+
+
 bool Analyzer::isBaseName(vector<string>& names) {
   return clas != nullptr and names.size() > 1 and
     (names[0] == "base" or (names[0] == "this" and names[1] == "base"));

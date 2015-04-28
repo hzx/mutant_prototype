@@ -116,7 +116,7 @@ TEST_F(AnalyzerTest, processThisIdentifier) {
 }
 
 
-TEST_F(AnalyzerTest, processGroups) {
+TEST_F(AnalyzerTest, processDependGroups) {
   // make one group depends from another inside module
   // group1:
   // int COUNT = 1;
@@ -156,6 +156,34 @@ TEST_F(AnalyzerTest, processGroups) {
   group2->functions.push_back(some);
   
   int error = analyzer.processModule(&module);
+
+  ASSERT_THAT(error, ERROR_OK);
+  ASSERT_THAT(group2->dependGroups.size(), 1);
+  ASSERT_THAT(group2->dependGroups[0], group1);
+}
+
+
+TEST_F(AnalyzerTest, processStyleDependGroups) {
+  // make one group depend from another inside module
+  // group1:
+  // commonButton {
+  //   padding: 4px 8px;
+  // }
+  // group2:
+  // sendButton: commonButton {
+  //   color: #123321;
+  // }
+
+  StyleModule module;
+  StyleFileGroup* group1 = new StyleFileGroup();
+  StyleFileGroup* group2 = new StyleFileGroup();
+
+  module.groups.push_back(group1);
+  module.groups.push_back(group2);
+
+  // TODO: add classes
+
+  int error = analyzer.processStyleModule(&module);
 
   ASSERT_THAT(error, ERROR_OK);
   ASSERT_THAT(group2->dependGroups.size(), 1);
@@ -210,4 +238,9 @@ TEST_F(AnalyzerTest, sortGroups) {
   ASSERT_THAT(error, ERROR_OK);
   ASSERT_THAT(module.groups[0], group2);
   ASSERT_THAT(module.groups[1], group1);
+}
+
+
+TEST_F(AnalyzerTest, sortStyleGroups) {
+  ASSERT_TRUE(false);
 }

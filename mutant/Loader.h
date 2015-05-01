@@ -21,13 +21,14 @@ class Loader {
 public:
   Loader();
 
-  string searchModuleDir(string& name, vector<string>& paths);
+  string searchModuleDir(vector<string>& name, vector<string>& paths);
   int detectModuleType(string& dir);
-  void loadFiles(BaseModule* module, const char ext[], const size_t extLength);
-  void loadFile(BaseModule* module, const char* filename);
+  void loadFiles(BaseModule* module, char const ext[], size_t extLength);
+  void loadFile(BaseModule* module, char const* filename);
   string nameToDir(string& name);
-  void loadModuleMut(Module* module);
-  void loadModuleMus(StyleModule* module);
+  string namesToDir(vector<string>& names);
+  void loadModule(Module* module);
+  void loadStyleModule(StyleModule* module);
 
   Options* options;
 };

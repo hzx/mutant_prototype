@@ -12,6 +12,7 @@ using std::vector;
 using std::ostream;
 
 
+// TODO: move style related code to JsStyleFormatter
 class JsFormatter {
 public:
   JsFormatter();
@@ -94,6 +95,8 @@ public:
 
   ostream* store;
   int indent = 0;
+  Class* clas = nullptr;
+  string errorMsg;
 };
 
 

@@ -2,6 +2,7 @@
 #include <dirent.h>
 #include <sstream>
 #include <fstream>
+#include <fstream>
 #include "utils.h"
 
 
@@ -37,16 +38,22 @@ vector<string> parseGeneric(string const& src, const char delim) {
 }
 
 
-string joinPath(string& dir, const char* name) {
+string joinPath(string& dir, char const* name) {
   ostringstream buf;
   buf << dir << '/' << name;
   return buf.str();
 }
 
 
-bool existsPath(string& path) {
+bool existsFile(string& filename) {
+  std::ifstream inp(filename);
+  return inp.good();
+}
+
+
+bool existsDir(string& path) {
   DIR* dir = opendir(path.c_str());
-  bool exists = dir != NULL;
+  bool exists = dir != nullptr;
   if (dir) closedir(dir);
   return exists;
 }
@@ -61,11 +68,31 @@ string getFileContent(string const& path) {
 }
 
 
-string getCwd() {
+string getCurrentDir() {
   char buf[BUF_SIZE];
   char* path = getcwd(buf, BUF_SIZE);
   if (path == nullptr) {
     return "";
   }
   return path;
+}
+
+
+int findSymbol(string const& content, char symbol, int left, int right) {
+  for (; left < right; ++left)
+    if (content[left] == symbol) return left;
+
+  return right;
+}
+
+
+void splitNames(vector<string>& names, string& content, int left, int right) {
+  int dot;
+  while (left < right) {
+    dot = findSymbol(content, '.', left, right);
+    if (dot - left > 0)
+      names.push_back(content.substr(left, dot-left));
+
+    left = dot + 1;
+  }
 }

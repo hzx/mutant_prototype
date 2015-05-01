@@ -4,6 +4,7 @@
 #include <cstring>
 #include <fstream>
 #include <sstream>
+#include <iostream> // debug
 #include <errno.h>
 #include "errors.h"
 #include "Loader.h"
@@ -22,12 +23,12 @@ Loader::Loader() {
 }
 
 
-string Loader::searchModuleDir(string& name, vector<string>& paths) {
-  string rel = nameToDir(name);
+string Loader::searchModuleDir(vector<string>& names, vector<string>& paths) {
+  string rel = namesToDir(names);
 
   for (string& p: paths) {
     string abs = joinPath(p, rel.c_str());
-    if (existsPath(abs)) return abs;
+    if (existsDir(abs)) return abs;
   }
 
   return "";
@@ -80,7 +81,7 @@ int Loader::detectModuleType(string& dirName) {
 }
 
 
-void Loader::loadFiles(BaseModule* module, const char ext[], const size_t extLength) {
+void Loader::loadFiles(BaseModule* module, char const ext[], size_t extLength) {
   DIR* dir = opendir(module->dir.c_str());
   if (dir == nullptr) {
     cout << "loader: cannot open dir: " << module->dir << endl;
@@ -111,7 +112,7 @@ void Loader::loadFiles(BaseModule* module, const char ext[], const size_t extLen
 }
 
 
-void Loader::loadFile(BaseModule* module, const char* filename) {
+void Loader::loadFile(BaseModule* module, char const* filename) {
   auto file = new File();
   module->files.push_back(file);
 
@@ -131,4 +132,28 @@ string Loader::nameToDir(string& name) {
   }
 
   return n;
+}
+
+string Loader::namesToDir(vector<string>& names) {
+  ostringstream buf;
+  bool isFirst = true;
+  for (auto name: names) {
+    if (isFirst) isFirst = false;
+    else buf << '/';
+    buf << name;
+  }
+
+  return buf.str();
+}
+
+
+// module->dir filled
+void Loader::loadModule(Module* module) {
+  loadFiles(module, EXT_MUT, EXT_LENGTH);
+}
+
+
+// module->dir filled
+void Loader::loadStyleModule(StyleModule* module) {
+  loadFiles(module, EXT_MUS, EXT_LENGTH);
 }

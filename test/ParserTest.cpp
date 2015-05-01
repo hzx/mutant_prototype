@@ -172,14 +172,46 @@ TEST_F(ParserTest, parseLambda) {
 }
 
 
+TEST_F(ParserTest, parseIfLambda) {
+  file->content = R"(int main() {
+  if window.addEventListener { // W3C
+    return void (object node, string name, object handler) {
+      node.addEventListener(name, handler, false);
+    };
+  }
+}
+)";
+
+  int lexerError = lexer.tokenize(file->content, file->tokens);
+  ASSERT_THAT(lexerError, ERROR_OK);
+
+  int parserError = parser.parse(&module);
+  ASSERT_THAT(parserError, ERROR_OK);
+
+  ASSERT_THAT(module.functions.size(), 1);
+
+  Function* fn = reinterpret_cast<Function*>(module.functions[0]);
+
+  ASSERT_THAT(fn->nodes.size(), 1);
+  ASSERT_THAT(fn->nodes[0]->code, Node::IF);
+}
+
+
 TEST_F(ParserTest, parseFunctionCallParams) {
   file->content = "int main() {"
-    "error(a, \"error #01\");"
-    " }";
-  int lexerError = lexer.tokenize(file->content, file->tokens);
-  int parserError = parser.parse(&module);
+  "  some.error(a, \"error #01\");"
+  "}";
 
+  int lexerError = lexer.tokenize(file->content, file->tokens);
   ASSERT_THAT(lexerError, ERROR_OK);
+
+  /* vector<string> words; */
+  /* vector<string> expectedWords; */
+  /* tokensToWords(file->tokens, words); */
+  /* ASSERT_THAT(words, expectedWords); */
+
+  int parserError = parser.parse(&module);
+  /* ASSERT_THAT(parser.errorMessage, testing::Eq("abc")); // debug */
   ASSERT_THAT(parserError, ERROR_OK);
   ASSERT_THAT(module.functions.size(), 1);
 
@@ -189,6 +221,9 @@ TEST_F(ParserTest, parseFunctionCallParams) {
   ASSERT_THAT(fn->nodes[0]->code, Node::FUNCTION_CALL);
 
   FunctionCall* fc = reinterpret_cast<FunctionCall*>(fn->nodes[0]);
+  vector<string> fcNames = {"some", "error"};
+
+  ASSERT_THAT(fc->names, fcNames);
   ASSERT_THAT(fc->params.size(), 2);
   ASSERT_TRUE(fc->params[0] != nullptr);
   ASSERT_TRUE(fc->params[1] != nullptr);
@@ -412,9 +447,9 @@ TEST_F(ParserTest, parseIf) {
     "}"
   "}";
   int lexerError = lexer.tokenize(file->content, file->tokens);
-  int parserError = parser.parse(&module);
-
   ASSERT_THAT(lexerError, ERROR_OK);
+
+  int parserError = parser.parse(&module);
   ASSERT_THAT(parserError, ERROR_OK);
   ASSERT_THAT(module.functions.size(), 1);
 
@@ -432,6 +467,40 @@ TEST_F(ParserTest, parseIf) {
   ASSERT_TRUE(ifn->else_ != nullptr);
   ASSERT_THAT(ifn->else_->nodes.size(), 1);
   ASSERT_THAT(ifn->else_->nodes[0]->code, Node::IDENTIFIER);
+}
+
+TEST_F(ParserTest, parseIfFor) {
+  file->content = R"(
+int main() {
+  if props isnot null {
+    for int i = 0; i < props.length; ++i {
+      i = i + 1;
+    }
+  }
+}
+)";
+
+  int lexerError = lexer.tokenize(file->content, file->tokens);
+  ASSERT_THAT(lexerError, ERROR_OK);
+
+  int parserError = parser.parse(&module);
+  ASSERT_THAT(parserError, ERROR_OK);
+  ASSERT_THAT(module.functions.size(), 1);
+
+  Function* func = module.functions[0];
+
+  ASSERT_THAT(func->nodes.size(), 1);
+  ASSERT_THAT(func->nodes[0]->code, Node::IF);
+
+  If* if_ = reinterpret_cast<If*>(func->nodes[0]);
+
+  ASSERT_THAT(if_->nodes.size(), 1);
+  ASSERT_THAT(if_->nodes[0]->code, Node::FOR);
+
+  For* for_ = reinterpret_cast<For*>(if_->nodes[0]);
+
+  ASSERT_THAT(for_->nodes.size(), 1);
+  ASSERT_THAT(for_->nodes[0]->code, Node::IDENTIFIER);
 }
 
 
@@ -513,7 +582,8 @@ TEST_F(ParserTest, parseFor) {
 TEST_F(ParserTest, parseForEach) {
   file->content = "int main() {"
     "for auto item: items {"
-      "a = 3;"
+      /* "a = 3;" */
+    "fn();"
     "}"
   "}";
 

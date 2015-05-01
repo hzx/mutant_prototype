@@ -1,3 +1,4 @@
+#include <iostream>
 #include "Analyzer.h"
 #include "helpers.h"
 
@@ -5,14 +6,14 @@
 // TODO: implement function, function call params check, types check
 
 
-int Analyzer::process(Environment& env, Module* module) {
-  this->env = &env;
+int Analyzer::process(Environment* env, Module* module) {
+  this->env = env;
   return processModule(module);
 }
 
 
-int Analyzer::process(Environment& env, StyleModule* module) {
-  this->env = &env;
+int Analyzer::process(Environment* env, StyleModule* module) {
+  this->env = env;
   return processStyleModule(module);
 }
 
@@ -22,13 +23,10 @@ int Analyzer::processModule(Module* module) {
 
   int error;
   for (auto group: module->groups) {
-    fileGroup = group;
     error = processGroup(group);
-    fileGroup = nullptr;
     if (error < 0) return error;
   }
 
-  // TODO: sort groups
   return sortModuleGroups(module);
   /* return ERROR_OK; */
 }
@@ -63,7 +61,28 @@ int Analyzer::processGroup(FileGroup* group) {
 
 
 int Analyzer::processStyleModule(StyleModule* module) {
-  // TODO: implement low priority
+  styleModule = module;
+
+  int error;
+  for (auto group: module->groups) {
+    error = processStyleGroup(group);
+    if (error < 0) return error;
+  }
+
+  return sortStyleModuleGroups(module);
+  /* return ERROR_OK; */
+}
+
+
+int Analyzer::processStyleGroup(StyleFileGroup* group) {
+  styleFileGroup = group;
+
+  int error;
+  for (auto clas: group->classes) {
+    error = processStyleClass(clas);
+    if (error < 0) return error;
+  }
+
   return ERROR_OK;
 }
 
@@ -71,23 +90,31 @@ int Analyzer::processStyleModule(StyleModule* module) {
 int Analyzer::processClass(Class* clas) {
   int error;
 
-  for (auto en: clas->enums) {
-    en->clas = clas;
-  }
-
-  for (auto decl: clas->functionDeclarations) {
-    decl->clas = clas;
+  // set superClass for this class
+  if (not clas->superNames.empty()) {
+    processGroupDepends(clas->superNames);
+    error = processSuperClass(clas);
+    if (error < 0) return error;
   }
 
   if (clas->constructor == nullptr) { // add default constructor
     auto fn = new Function();
     fn->isConstructor = true;
     fn->name = clas->name;
+    fn->clas = clas;
 
     clas->constructor = fn;
   } else {
     error = processFunction(clas->constructor);
     if (error < 0) return error;
+  }
+
+  for (auto en: clas->enums) {
+    en->clas = clas;
+  }
+
+  for (auto decl: clas->functionDeclarations) {
+    decl->clas = clas;
   }
 
   for (auto fn: clas->functions) {
@@ -104,6 +131,23 @@ int Analyzer::processClass(Class* clas) {
 
     error = processVariable(var);
     if (error < 0) return error;
+  }
+
+  return ERROR_OK;
+}
+
+
+// search for class superClass in other groups
+// and check dependency
+int Analyzer::processStyleClass(StyleClass* clas) {
+  if (clas->superNames.empty() or clas->superNames.size() != 1)
+    return ERROR_OK;
+
+  for (auto group: styleModule->groups) {
+    if (group == styleFileGroup) continue; // skip current group
+    for (auto oclas: group->classes)
+      if (clas->superNames[0] == oclas->name)
+        styleFileGroup->dependGroups.push_back(group);
   }
 
   return ERROR_OK;
@@ -141,6 +185,8 @@ int Analyzer::processIdentifier(Identifier* ident) {
   }
 
   if (ident->node != nullptr) {
+    if (isModuleVariableName(ident->names)) ident->isModuleVariable = true;
+
     error = processRightNode(ident->node);
     if (error < 0) return error;
   }
@@ -205,6 +251,13 @@ int Analyzer::processFunctionCall(FunctionCall* fcall) {
     } else if (isMemberNames(fcall->names)) {
       fcall->isClassMember = true;
     }
+
+    if (fcall->tail != nullptr) {
+      fcall->tail->dontTouch = true;
+      int error = processRightNode(fcall->tail);
+      if (error < 0) return error;
+    }
+
     processGroupDepends(fcall->names);
   }
   
@@ -519,7 +572,7 @@ int Analyzer::processIf(If* if_) {
   }
 
   for (auto node: if_->nodes) {
-    error = processRightNode(node);
+    error = processBlockNode(node);
     if (error < 0) {
       blocks.pop();
       return error;
@@ -532,7 +585,7 @@ int Analyzer::processIf(If* if_) {
     blocks.push(if_->else_);
 
     for (auto node: if_->else_->nodes) {
-      error = processRightNode(node);
+      error = processBlockNode(node);
       if (error < 0) {
         blocks.pop();
         return error;
@@ -785,6 +838,21 @@ int Analyzer::processBlockNode(Node* node) {
         AddSuffix* n = reinterpret_cast<AddSuffix*>(node);
         return processAddSuffix(n);
       }
+    case Node::SUB_ASSIGN:
+      {
+        SubAssign* n = reinterpret_cast<SubAssign*>(node);
+        return processSubAssign(n);
+      }
+    case Node::SUB_PREFIX:
+      {
+        SubPrefix* n = reinterpret_cast<SubPrefix*>(node);
+        return processSubPrefix(n);
+      }
+    case Node::SUB_SUFFIX:
+      {
+        SubSuffix* n = reinterpret_cast<SubSuffix*>(node);
+        return processSubSuffix(n);
+      }
     case Node::MUL_ASSIGN:
       {
         MulAssign* n = reinterpret_cast<MulAssign*>(node);
@@ -1015,6 +1083,7 @@ int Analyzer::processRightNode(Node* node) {
         return processTag(n);
       }
     default:
+      errorMsg = std::to_string(node->code);
       return ANALYZER_UNKNOWN_RIGHT_NODE;
   }
 
@@ -1057,7 +1126,7 @@ int Analyzer::sortModuleGroups(Module* module) {
 }
 
 
-int sortStyleModuleGroups(StyleModule* module) {
+int Analyzer::sortStyleModuleGroups(StyleModule* module) {
   StyleFileGroup* group;
   vector<StyleFileGroup*> sorted;
   size_t tmp;
@@ -1099,6 +1168,8 @@ bool Analyzer::isBaseName(vector<string>& names) {
 
 
 bool Analyzer::isLocalName(string& name) {
+  if (blocks.empty()) return false;
+
   BlockNode* block = blocks.top();
   while (block != nullptr) {
     for (auto var: block->variables)
@@ -1110,21 +1181,51 @@ bool Analyzer::isLocalName(string& name) {
 }
 
 
+bool Analyzer::isModuleVariableName(vector<string>& names) {
+  if (names.size() != 1) return false;
+
+  string name = names[0];
+  if (isLocalName(name)) return false;
+
+  for (auto var: module->variables) {
+    if (name == var->name) return true;
+  }
+
+  return false;
+}
+
+
+bool Analyzer::isClassMemberName(Class* clas, string& name) {
+  for (Variable* var: clas->variables) {
+    if (var->isStatic) continue;
+    if (name == var->name) return true;
+  }
+
+  for (Function* fn: clas->functions)
+    if (name == fn->name) return true;
+
+  if (clas->superClass != nullptr)
+    return isClassMemberName(clas->superClass, name);
+
+  return false;
+}
+
+
 // check names in block variables and parent block variables
 // and then check class members
 bool Analyzer::isMemberNames(vector<string>& names) {
   if (clas == nullptr or blocks.empty() or names.empty()) return false;
 
-  string* name;
+  string name;
   switch (names.size()) {
     case 1:
       if (names[0] == "base" or names[0] == "this") return false;
-      name = &names[0];
+      name = names[0];
       break;
     default:
       if (names[0] == "base") return false;
-      if (names[0] == "this") name = &names[1];
-      else name = &names[0];
+      if (names[0] == "this") name = names[1];
+      else name = names[0];
       break;
   }
 
@@ -1134,18 +1235,11 @@ bool Analyzer::isMemberNames(vector<string>& names) {
     // dont set this inside lambda
     if (block->code == Node::LAMBDA) return false;
     for (Variable* var: block->variables) // encounter local variable name
-      if (*name == var->name) return false;
+      if (name == var->name) return false;
     block = block->parent;
   }
 
-
-  for (Variable* var: clas->variables)
-    if (*name == var->name) return true;
-
-  for (Function* fn: clas->functions)
-    if (*name == fn->name) return true;
-
-  return false;
+  return isClassMemberName(clas, name);
 }
 
 
@@ -1175,10 +1269,46 @@ bool Analyzer::isNamesFromOtherGroup(vector<string>& names, FileGroup* group) {
   
   // classes
   for (auto clas: group->classes) {
+    /* if (this->clas == clas) continue; // skip the same class */
     if (name == clas->name) return true;
   }
 
   return false;
+}
+
+
+// TODO: implement
+int Analyzer::processSuperClass(Class* clas) {
+  // search class in module classes
+  if (clas->superNames.size() == 1) {
+    string name = clas->superNames[0];
+    for (auto superClass: module->classes) {
+      if (name == superClass->name) {
+        clas->superClass = superClass;
+        return ERROR_OK;
+      }
+    }
+  } else {
+    vector<string> moduleNames(clas->superNames.begin(), clas->superNames.end() - 1);
+    string name = clas->superNames.back();
+    Module* importModule;
+    // search class in import classes
+    for (auto import: module->imports) {
+      // skip non code modules (styles)
+      if (import->module->code != MODULE_MUT) continue;
+      importModule = reinterpret_cast<Module*>(import->module);
+      if (importModule->names == moduleNames) {
+        for (auto superClass: importModule->classes) {
+          if (name == superClass->name) {
+            clas->superClass = superClass;
+            return ERROR_OK;
+          }
+        }
+      }
+    }
+  }
+
+  return ANALYZER_SUPERCLASS_NOT_FOUND_ERROR;
 }
 
 

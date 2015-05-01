@@ -12,8 +12,8 @@ using std::string;
 
 class StyleParser {
 public:
-  int parse(Environment& env, string moduleName);
-  int parseModule(StyleModule* module);
+  /* int parse(Environment& env, string moduleName); */
+  int parse(StyleModule* module);
   int parseGlobal(int left, int right);
   int parseImport(StyleImport* import, int left, int right);
   int parseClass(StyleClass* clas, int left, int right);
@@ -32,7 +32,7 @@ public:
   StyleModule* module = nullptr;
   vector<Token>* tokens = nullptr;
 
-  FileGroup* fileGroup;
+  StyleFileGroup* fileGroup;
   File* errorFile;
   int errorLine;
   int errorPos;

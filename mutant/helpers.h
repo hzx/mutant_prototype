@@ -4,11 +4,13 @@
 
 #include <string>
 #include <vector>
+#include <ostream>
 #include "structs.h"
 
 
 using std::string;
 using std::vector;
+using std::ostream;
 
 
 void tokensToWords(vector<Token>& tokens, vector<string>& words);
@@ -21,8 +23,10 @@ bool isOperatorNode(Node* node);
 bool isBlockNode(Node* node);
 bool isForEach(int left, int right);
 bool isTagName(vector<string>& names);
+bool inModules(BaseModule* module, vector<BaseModule*> modules);
 /* bool isNamesEqual(vector<string>& namesLeft, vector<string>& namesRight); */
 int getMinOpPriority(vector<Node*>& nodes, int left, int right);
+void saveNames(vector<string>& names, ostream& store);
 
 
 #endif /* end of include guard: MUTANT_HELPER_H */

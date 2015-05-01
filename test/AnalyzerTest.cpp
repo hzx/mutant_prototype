@@ -181,7 +181,29 @@ TEST_F(AnalyzerTest, processStyleDependGroups) {
   module.groups.push_back(group1);
   module.groups.push_back(group2);
 
-  // TODO: add classes
+  StyleClass* commonButton = new StyleClass();
+  commonButton->name = "commonButton";
+
+  StyleProperty* s_prop = new StyleProperty();
+  s_prop->name = "padding";
+  s_prop->values = {"4px", "8px"};
+
+  commonButton->properties.push_back(s_prop);
+
+  StyleClass* sendButton = new StyleClass();
+  sendButton->name = "sendButton";
+  sendButton->superNames = {"commonButton"};
+
+  StyleProperty* c_prop = new StyleProperty();
+  c_prop->name = "color";
+  c_prop->values = {"#123321"};
+
+  sendButton->properties.push_back(c_prop);
+
+  group1->classes.push_back(commonButton);
+  module.classes.push_back(commonButton);
+  group2->classes.push_back(sendButton);
+  module.classes.push_back(sendButton);
 
   int error = analyzer.processStyleModule(&module);
 
@@ -242,5 +264,50 @@ TEST_F(AnalyzerTest, sortGroups) {
 
 
 TEST_F(AnalyzerTest, sortStyleGroups) {
-  ASSERT_TRUE(false);
+  // make one group depend from another inside module
+  // group1:
+  // sendButton: commonButton {
+  //   color: #123321;
+  // }
+  // group2:
+  // commonButton {
+  //   padding: 4px 8px;
+  // }
+
+  StyleModule module;
+  StyleFileGroup* group1 = new StyleFileGroup();
+  StyleFileGroup* group2 = new StyleFileGroup();
+
+  module.groups.push_back(group1);
+  module.groups.push_back(group2);
+
+  StyleClass* commonButton = new StyleClass();
+  commonButton->name = "commonButton";
+
+  StyleProperty* s_prop = new StyleProperty();
+  s_prop->name = "padding";
+  s_prop->values = {"4px", "8px"};
+
+  commonButton->properties.push_back(s_prop);
+
+  StyleClass* sendButton = new StyleClass();
+  sendButton->name = "sendButton";
+  sendButton->superNames = {"commonButton"};
+
+  StyleProperty* c_prop = new StyleProperty();
+  c_prop->name = "color";
+  c_prop->values = {"#123321"};
+
+  sendButton->properties.push_back(c_prop);
+
+  group1->classes.push_back(sendButton);
+  module.classes.push_back(sendButton);
+  group2->classes.push_back(commonButton);
+  module.classes.push_back(commonButton);
+
+  int error = analyzer.processStyleModule(&module);
+
+  ASSERT_THAT(error, ERROR_OK);
+  ASSERT_THAT(module.groups[0], group2);
+  ASSERT_THAT(module.groups[1], group1);
 }

@@ -1,37 +1,12 @@
+#include <sstream>
 #include "JsFormatter.h"
 #include "helpers.h"
 
 
+using std::ostringstream;
+
+
 char INDENT_SPACES[] = "  ";
-
-char MUTANT_SYSTEM_JS[] = R"(
-window.mutant = window.mutant || {};
-
-mutant.register__ = function(names, module) {
-  for (var i = 0; i < names.length - 1; ++i)
-    if (!(names[i] in mutant)) mutant[names[i]] = {};
-  mutant[names[names.length - 1]] = module;
-};
-
-mutant.extends__ = function(child, base) {
-  var tmp = new Function();
-  tmp.prototype = base.prototype;
-  child.prototype = new tmp();
-  child.prototype.constructor = child;
-  child.base = base.prototype;
-};
-
-mutant.augment__ = function(dest, src) {
-  for (name in src) dest[name] = src[name];
-}
-
-mutant.bind__ = function(context, func) {
-  return function() {
-    return func.apply(context, arguments);
-  };
-};
-)";
-
 
 JsFormatter::JsFormatter()
     : store(nullptr) {
@@ -44,21 +19,25 @@ int JsFormatter::formatFileGroup(FileGroup* group) {
   for (auto en: group->enums) {
     error = formatEnum(en);
     if (error < 0) return error;
+    *store << '\n';
   }
 
   for (auto fn: group->functions) {
     error = formatGlobalFunction(fn);
     if (error < 0) return error;
+    *store << '\n';
   }
 
   for (auto var: group->variables) {
     error = formatGlobalVariable(var);
     if (error < 0) return error;
+    *store << '\n';
   }
 
   for (auto clas: group->classes) {
     error = formatClass(clas);
     if (error < 0) return error;
+    /* *store << '\n'; */
   }
 
   return ERROR_OK;
@@ -72,8 +51,6 @@ int JsFormatter::formatModule(Module* module, ostream& store_) {
   store_ << "(function() {\n"
     << "var module__ = {};\n\n";
 
-  // TODO: check in browser unordered items show error?!
-  // TODO: format module items
   // after each item place empty line
   int error;
   // imports
@@ -81,11 +58,14 @@ int JsFormatter::formatModule(Module* module, ostream& store_) {
     error = formatImport(import);
     if (error < 0) return error;
   }
+  if (not module->imports.empty()) store_ << '\n';
+
   // usings
   for (auto us: module->usings) {
     error = formatUsing(us);
     if (error < 0) return error;
   }
+  if (not module->usings.empty()) store_ << '\n';
 
   for (auto group: module->groups) {
     error = formatFileGroup(group);
@@ -124,6 +104,13 @@ int JsFormatter::formatStyleModule(StyleModule* module, ostream& store) {
     << "var module__ = {};\n\n";
 
   int error;
+
+  for (auto import: module->imports) {
+    error = formatStyleImport(import);
+    if (error < 0) return error;
+  }
+  if (not module->imports.empty()) store << '\n';
+
   // TODO: add variables here
 
   for (auto group: module->groups)  {
@@ -435,17 +422,23 @@ int JsFormatter::formatEnum(Enum* en) {
 
 
 int JsFormatter::formatClass(Class* clas) {
-  int error = formatConstructor(clas->constructor);
-  if (error < 0) return error;
-  if (clas->superNames.size() > 0) {
-    *store << "mutant.extends__(" << clas->name << ", ";
-    formatNames(clas->superNames);
-    *store << ");\n";
+  int error;
+  this->clas = clas;
+
+  if (clas->constructor != nullptr) {
+    error = formatConstructor(clas->constructor);
+    if (error < 0) return error;
+    if (clas->superNames.size() > 0) {
+      *store << "mutant.extends__(" << clas->name << ", ";
+      formatNames(clas->superNames);
+      *store << ");\n\n";
+    } else *store << '\n';
   }
 
   for (auto en: clas->enums) {
     error = formatEnum(en);
     if (error < 0) return error;
+    *store << '\n';
   }
 
   // non static variables in constructor
@@ -453,6 +446,7 @@ int JsFormatter::formatClass(Class* clas) {
     if (var->isStatic) {
       error = formatStaticVariable(var);
       if (error < 0) return error;
+    *store << '\n';
     }
   }
 
@@ -463,6 +457,7 @@ int JsFormatter::formatClass(Class* clas) {
       error = formatClassFunction(fn);
     }
     if (error < 0) return error;
+    *store << '\n';
   }
 
   return ERROR_OK;
@@ -488,13 +483,14 @@ int JsFormatter::formatStyleClass(StyleClass* clas) {
   if (!clas->superNames.empty()) {
     *store << "mutant.augment__(" << clas->name << ", ";
     formatNames(clas->superNames);
-    *store << ");\n";
-  }
+    *store << ");\n\n";
+  } else *store << '\n';
 
   return ERROR_OK;
 }
 
 
+// TODO: inline url images if url without quotes
 int JsFormatter::formatStyleProperty(StyleProperty* prop) {
   bool isFirst = true;
   string prev = " ";
@@ -518,7 +514,7 @@ int JsFormatter::formatStyleProperty(StyleProperty* prop) {
 
 
 int JsFormatter::formatIf(If* if_) {
-  storeIndent();
+  /* storeIndent(); */
   *store << "if (";
 
   int error = formatRightNode(if_->condition);
@@ -622,6 +618,7 @@ int JsFormatter::formatSwitch(Switch* sw) {
 
   decIndent();
 
+  storeIndent();
   *store << "}\n";
 
   return ERROR_OK;
@@ -934,7 +931,7 @@ int JsFormatter::formatFunctionCall(FunctionCall* fc) {
     formatNames(fc->names);
     *store << '(';
   } else if (fc->isBaseCall) {
-    *store << fc->clas->name << ".base.";
+    *store << clas->name << '.'; // TODO: make base__ (add __)
     formatNames(fc->names);
     *store << ".call(this";
     if (!fc->params.empty()) *store << ", ";
@@ -955,6 +952,12 @@ int JsFormatter::formatFunctionCall(FunctionCall* fc) {
   }
 
   *store << ')';
+
+  if (fc->tail != nullptr) {
+    *store << '.';
+    error = formatRightNode(fc->tail);
+    if (error < 0) return error;
+  }
 
   return ERROR_OK;
 }
@@ -1017,6 +1020,7 @@ int JsFormatter::formatDelete(Delete* del) {
 
 
 int JsFormatter::formatIndex(Index* index) {
+  if (index->isClassMember) *store << "this.";
   formatNames(index->names);
   *store << '[';
   int error = formatRightNode(index->key);
@@ -1054,9 +1058,10 @@ int JsFormatter::formatIn(In* in) {
 
 
 int JsFormatter::formatIdentifier(Identifier* id) {
+  if (id->isClassMember and id->names.front() != "this") *store << "this.";
   formatNames(id->names);
 
-  if (id->isGlobal) {
+  if (id->isModuleVariable) {
     *store << " = module__.";
     formatNames(id->names);
   }
@@ -1065,7 +1070,7 @@ int JsFormatter::formatIdentifier(Identifier* id) {
     *store << " = ";
     int error = formatRightNode(id->node);
     if (error < 0) return error;
-    *store << ";\n";
+    /* *store << ";\n"; */
   }
 
   return ERROR_OK;
@@ -1074,6 +1079,7 @@ int JsFormatter::formatIdentifier(Identifier* id) {
 
 int JsFormatter::formatInlineIdentifier(Identifier* id) {
   if (id->node != nullptr) storeIndent();
+  if (id->isClassMember) *store << "this.";
   formatNames(id->names);
 
   if (id->node != nullptr) {
@@ -1087,11 +1093,37 @@ int JsFormatter::formatInlineIdentifier(Identifier* id) {
 
 
 int JsFormatter::formatArrayLiteral(ArrayLiteral* arr) {
+  *store << '[';
+
+  int error;
+  bool isFirst = true;
+  for (auto n: arr->nodes) {
+    if (isFirst) isFirst = false;
+    else *store << ", ";
+    error = formatRightNode(n);
+    if (error < 0) return error;
+  }
+
+  *store << ']';
   return ERROR_OK;
 }
 
 
 int JsFormatter::formatDicLiteral(DicLiteral* dic) {
+  *store << '{';
+
+  int error;
+  bool isFirst = true;
+  for (auto pair: dic->pairs) {
+    if (isFirst) isFirst = false;
+    else *store << ", ";
+    error = formatRightNode(pair->key);
+    if (error < 0) return error;
+    error = formatRightNode(pair->value);
+    if (error < 0) return error;
+  }
+
+  *store << '}';
   return ERROR_OK;
 }
 
@@ -1520,7 +1552,9 @@ int JsFormatter::formatBlockNode(Node* node) {
     case Node::IDENTIFIER:
       {
         Identifier* n = reinterpret_cast<Identifier*>(node);
-        return formatIdentifier(n);
+        int error = formatIdentifier(n);
+        *store << ";\n";
+        return error;
       }
     case Node::VARIABLE:
       {
@@ -1573,6 +1607,25 @@ int JsFormatter::formatBlockNode(Node* node) {
         Return* n = reinterpret_cast<Return*>(node);
         return formatReturn(n);
       }
+    case Node::ADD_PREFIX:
+      {
+        AddPrefix* n = reinterpret_cast<AddPrefix*>(node);
+        int error = formatAddPrefix(n);
+        *store << ";\n";
+        return error;
+      }
+    case Node::SUB_PREFIX:
+      {
+        SubPrefix* n = reinterpret_cast<SubPrefix*>(node);
+        int error = formatSubPrefix(n);
+        *store << ";\n";
+        return error;
+      }
+    default:
+      ostringstream buf;
+      buf << "unknown block node with code: " << node->code;
+      errorMsg = buf.str();
+      return ANALYZER_UNKNOWN_BLOCK_NODE;
   }
 
   return ERROR_OK;

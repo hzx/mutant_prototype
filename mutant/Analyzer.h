@@ -19,12 +19,14 @@ int const TASK_GROUPS_DEPS = 2;
 // use the same methods but with different TASK
 class Analyzer {
 public:
-  int process(Environment& env, Module* module);
-  int process(Environment& env, StyleModule* module);
+  int process(Environment* env, Module* module);
+  int process(Environment* env, StyleModule* module);
   int processModule(Module* module);
   int processGroup(FileGroup* group);
   int processStyleModule(StyleModule* module);
+  int processStyleGroup(StyleFileGroup* group);
   int processClass(Class* clas);
+  int processStyleClass(StyleClass* clas);
   int processArrayLiteral(ArrayLiteral* arr);
   int processDicLiteral(DicLiteral* dic);
   int processIdentifier(Identifier* ident);
@@ -81,15 +83,20 @@ public:
 
   bool isBaseName(vector<string>& names);
   bool isLocalName(string& name);
+  bool isModuleVariableName(vector<string>& names);
+  bool isClassMemberName(Class* clas, string& name);
   bool isMemberNames(vector<string>& names);
   bool isNamesFromOtherGroup(vector<string>& names, FileGroup* group);
+  int processSuperClass(Class* clas);
   int processGroupDepends(vector<string>& names);
 
   // common context for process
   Environment* env = nullptr;
   stack<BlockNode*> blocks;
   Module* module = nullptr;
+  StyleModule* styleModule = nullptr;
   FileGroup* fileGroup = nullptr;
+  StyleFileGroup* styleFileGroup = nullptr;
   Class* clas = nullptr;
   Function* function = nullptr;
   string errorMsg;

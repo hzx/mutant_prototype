@@ -50,6 +50,8 @@ public:
   int parseIdentifier(Identifier* identifier, int left, int right);
   int parseNew(New* newn, int left, int right);
   int parseIndex(Index* index, int left, int right);
+  int parseAddPrefix(AddPrefix* ap, int left, int right);
+  int parseSubPrefix(SubPrefix* sp, int left, int right);
 
   int parseNodesOnce(vector<Node*>& nodes, int left, int right);
   int parseNodes(vector<Node*>& nodes, int left, int right);
@@ -64,6 +66,7 @@ public:
   int detectNodes(int left, int right);
   int detectNode(int left, int right);
   int findSymbol(char symbol, int left, int right);
+  int findSemicolon(int left, int right);
   int findWord(string const& word, int left, int right);
   int parseNames(vector<string>& names, int left, int right);
   // left position must be open bracket

@@ -282,6 +282,13 @@ bool isTagName(vector<string>& names) {
 }
 
 
+bool inModules(BaseModule* module, vector<BaseModule*> modules) {
+  for (BaseModule* m: modules)
+    if (module == m) return true;
+  return false;
+}
+
+
 int getMinOpPriority(vector<Node*>& nodes, int left, int right) {
   int min = MIN_DEFAULT;
   int index = -1;
@@ -294,4 +301,14 @@ int getMinOpPriority(vector<Node*>& nodes, int left, int right) {
     }
   }
   return index;
+}
+
+
+void saveNames(vector<string>& names, ostream& store) {
+  bool isFirst = true;
+  for (auto name: names) {
+    if (isFirst) isFirst = false;
+    else store << '.';
+    store << name;
+  }
 }

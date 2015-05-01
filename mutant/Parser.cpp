@@ -49,6 +49,8 @@ int const AIM_EXPRESSION = 11;
 int const AIM_STRING_LITERAL = 12;
 int const AIM_INT_LITERAL = 13;
 int const AIM_FLOAT_LITERAL = 14;
+int const AIM_ADD_PREFIX = 15;
+int const AIM_SUB_PREFIX = 16;
 
 
 Parser::Parser()
@@ -61,24 +63,44 @@ Parser::Parser()
 // TODO: return error object instead int, or save error, file, line, pos in errorMessage class
 // member
 int Parser::parse(Module* module_) {
-  if (!module_) return -3301;
   module = module_;
 
   int cursor, right, prev;
   for (File* file: module->files) {
     unique_ptr<FileGroup> fileGroup(new FileGroup());
     fileGroup->file = file;
+    errorFile = file;
     this->fileGroup = fileGroup.get();
 
     tokens = &file->tokens;
     cursor = 0;
     right = tokens->size();
+
+    // check pair brackets in file
+    int counter = checkBrackets(0, right);
+    if (counter != 0) {
+      errorMessage = std::to_string(counter);
+      return COUNTER_BRACKET_ERROR;
+    }
+    counter = checkRoundBrackets(0, right);
+    if (counter != 0) {
+      errorMessage = std::to_string(counter);
+      return COUNTER_ROUND_BRACKET_ERROR;
+    }
+    counter = checkCurlyBrackets(0, right);
+    if (counter != 0) {
+      errorMessage = std::to_string(counter);
+      return COUNTER_CURLY_BRACKET_ERROR;
+    }
+
     while (cursor < right) {
       prev = cursor;
       cursor = parseGlobal(cursor, right);
       if (cursor < 0) return cursor;
       if (prev == cursor) return PARSER_PERPETUAL_LOOP;
     }
+
+    module_->groups.push_back(fileGroup.release());
   }
 
   return 0;
@@ -365,19 +387,24 @@ int Parser::parseFunction(Function* function, int left, int right) {
 
 
 int Parser::parseLambda(Lambda* lambda, int left, int right) {
-  /* if (tokens->at(left).word[0] != '(') return FUNCTION_OPEN_ROUND_BRACKET_ERROR; */
   int openRoundBracket = findSymbol('(', left, right);
   if (openRoundBracket == right) return FUNCTION_OPEN_ROUND_BRACKET_ERROR;
 
-  int closeRoundBracket = findPairRoundBracket(left, right);
+  int closeRoundBracket = findPairRoundBracket(openRoundBracket, right);
   if (closeRoundBracket == right) return FUNCTION_CLOSE_ROUND_BRACKET_ERROR;
 
   int openCurlyBracket = closeRoundBracket + 1;
   string& curlyBracket = getNextTokenWord(right, openCurlyBracket);
-  if (curlyBracket[0] != '{') return FUNCTION_OPEN_CURLY_BRACKET_ERROR;
+  if (curlyBracket[0] != '{') {
+    errorMessage = std::to_string(right);
+    return FUNCTION_OPEN_CURLY_BRACKET_ERROR;
+  }
 
   int closeCurlyBracket = findPairCurlyBracket(openCurlyBracket, right);
-  if (closeCurlyBracket == right) return FUNCTION_CLOSE_CURLY_BRACKET_ERROR;
+  if (closeCurlyBracket == right) {
+    errorMessage = std::to_string(right);
+    return FUNCTION_CLOSE_CURLY_BRACKET_ERROR;
+  }
 
   string& semicolonWord = getNextTokenWord(right, closeCurlyBracket + 1);
   int semicolon = -1;
@@ -426,7 +453,6 @@ int Parser::parseFunctionParams(vector<Variable*>& params, int left, int right) 
 }
 
 
-// TODO: parse tail node
 int Parser::parseFunctionCall(FunctionCall* fc, int left, int right) {
   int semicolon = findSymbol(';', left, right);
 
@@ -472,7 +498,7 @@ int Parser::parseFunctionCallParams(vector<Node*>& params, int left, int right) 
 
 
 int Parser::parseVariable(Variable* variable, int left, int right) {
-  int semicolon = findSymbol(';', left, right);
+  int semicolon = findSemicolon(left, right);
   /* if (semicolon == right) return PARSER_NO_SEMICOLON_ERROR; */
 
   int equal = findSymbol('=', left, semicolon);
@@ -1167,9 +1193,8 @@ int Parser::parseNew(New* newn, int left, int right) {
 } 
 
 
-// TODO: parse tail node
 int Parser::parseIndex(Index* index, int left, int right) {
-  int semicolon = findSymbol(';', left, right);
+  int semicolon = findSemicolon(left, right);
   int openBracket = findSymbol('[', left, semicolon);
   if (openBracket == right) return INDEX_OPEN_BRACKET_ERROR;
   int closeBracket = findPairBracket(openBracket, semicolon);
@@ -1196,6 +1221,26 @@ int Parser::parseIndex(Index* index, int left, int right) {
   }
 
   return semicolon != right ? semicolon + 1 : closeBracket + 1;
+}
+
+
+int Parser::parseAddPrefix(AddPrefix* ap, int left, int right) {
+  int semicolon = findSymbol(';', left, right);
+
+  int error = parseNode(ap->node, left, right);
+  if (error < 0) return error;
+
+  return semicolon + 1;
+}
+
+
+int Parser::parseSubPrefix(SubPrefix* sp, int left, int right) {
+  int semicolon = findSymbol(';', left, right);
+
+  int error = parseNode(sp->node, left, right);
+  if (error < 0) return error;
+
+  return semicolon + 1;
 }
 
 
@@ -1289,13 +1334,14 @@ int Parser::parseFor(For* forn, int left, int right) {
 
   int error = parseForInit(forn, left, firstSemicolon + 1);
   if (error < 0) return error;
+
   error = parseNode(forn->condition, firstSemicolon + 1, secondSemicolon + 1);
   if (error < 0) return error;
 
   error = parseForInc(forn, secondSemicolon + 1, openCurlyBracket);
   if (error < 0) return error;
 
-  error = parseNodes(forn->nodes, openCurlyBracket, closeCurlyBracket);
+  error = parseNodes(forn->nodes, openCurlyBracket + 1, closeCurlyBracket);
   if (error < 0) return error;
 
   return closeCurlyBracket + 1;
@@ -1352,7 +1398,7 @@ int Parser::parseForEach(ForEach* foreach, int left, int right) {
   if (error < 0) return error;
   foreach->values = id.release();
 
-  error = parseNodes(foreach->nodes, openCurlyBracket, closeCurlyBracket);
+  error = parseNodes(foreach->nodes, openCurlyBracket + 1, closeCurlyBracket);
   if (error < 0) return error;
 
   return closeCurlyBracket + 1;
@@ -1492,7 +1538,7 @@ int Parser::parseTagChilds(Tag* tag, int left, int right) {
 
 
 int Parser::parseArrayDeclaration(ArrayLiteral* array, int left, int right) {
-  int semicolon = findSymbol(';', left, right);
+  int semicolon = findSemicolon(left, right);
   int openBracket = left;
   if (tokens->at(left).word[0] != '[') return ARRAY_OPEN_BRACKET_ERROR;
   int closeBracket = findPairBracket(openBracket, right);
@@ -1517,7 +1563,7 @@ int Parser::parseArrayDeclaration(ArrayLiteral* array, int left, int right) {
 
 
 int Parser::parseDicDeclaration(DicLiteral* dic, int left, int right) {
-  int semicolon = findSymbol(';', left, right);
+  int semicolon = findSemicolon(left, right);
   int openBracket = left;
   if (tokens->at(left).word[0] != '{') return DIC_OPEN_BRACKET_ERROR;
   int closeBracket = findPairCurlyBracket(openBracket, right);
@@ -1564,7 +1610,7 @@ int Parser::parseDicDeclaration(DicLiteral* dic, int left, int right) {
 
 
 int Parser::parseIdentifier(Identifier* identifier, int left, int right) {
-  int semicolon = findSymbol(';', left, right);
+  int semicolon = findSemicolon(left, right);
   int equal = findSymbol('=', left, semicolon);
 
   int cursor = parseNames(identifier->names, left, equal);
@@ -1633,7 +1679,7 @@ int Parser::parseNodesOnce(vector<Node*>& nodes, int left, int right) {
 
   if (token.word == "return") {
     unique_ptr<Return> ret(new Return());
-    int semicolon = findSymbol(';', left + 1, right);
+    int semicolon = findSemicolon(left + 1, right);
     if (semicolon == right) return RETURN_NO_SEMICOLON_ERROR;
     if (semicolon - left > 1) {
       int error = parseNode(ret->node, left + 1, semicolon);
@@ -1660,6 +1706,7 @@ int Parser::parseNodesOnce(vector<Node*>& nodes, int left, int right) {
   }
 
   int aim = detectNodes(left, right);
+  if (aim < 0) return aim;
 
   switch (aim) {
     case AIM_IDENTIFIER:
@@ -1702,6 +1749,20 @@ int Parser::parseNodesOnce(vector<Node*>& nodes, int left, int right) {
         unique_ptr<Index> index(new Index());
         int result = parseIndex(index.get(), left, right);
         if (result >= 0) nodes.push_back(index.release());
+        return result;
+      }
+    case AIM_ADD_PREFIX:
+      {
+        unique_ptr<AddPrefix> ap(new AddPrefix());
+        int result = parseAddPrefix(ap.get(), left + 2, right);
+        if (result >= 0) nodes.push_back(ap.release());
+        return result;
+      }
+    case AIM_SUB_PREFIX:
+      {
+        unique_ptr<SubPrefix> sp(new SubPrefix());
+        int result = parseSubPrefix(sp.get(), left + 2, right);
+        if (result >= 0) nodes.push_back(sp.release());
         return result;
       }
   }
@@ -2006,8 +2067,9 @@ int Parser::detectNodes(int left, int right) {
       case '(':
         {
           string& prev = getPrevTokenWord(left, i - 1);
-          if (isIdentifierFirst(prev[0]))
+          if (isIdentifierFirst(prev[0])) {
             return AIM_FUNCTION_CALL;
+          }
         }
         break;
       case '[':
@@ -2019,6 +2081,18 @@ int Parser::detectNodes(int left, int right) {
       case '<': // not use right now
         // TODO: is template variable or function call
         break;
+      case '+':
+        {
+        string& next = getNextTokenWord(right, i + 1);
+        if (next[0] == '+') return AIM_ADD_PREFIX;
+        break;
+        }
+      case '-':
+        {
+        string& next = getNextTokenWord(right, i + 1);
+        if (next[0] == '-') return AIM_SUB_PREFIX;
+        break;
+        }
     }
   }
 
@@ -2095,6 +2169,31 @@ int Parser::findSymbol(char symbol, int left, int right) {
     // dont check word length, because no empty tokens present, minimum
     // 1 symbol
     if (tokens->at(i).word[0] == symbol) return i;
+
+  return right;
+}
+
+
+int Parser::findSemicolon(int left, int right) {
+  int cursor;
+  while (left < right) {
+    switch (tokens->at(left).word[0]) {
+      case '(':
+        cursor = findPairRoundBracket(left, right);
+        if (cursor == right) return right;
+        left = cursor;
+        break;
+      case '{':
+        cursor = findPairCurlyBracket(left, right);
+        if (cursor == right) return right;
+        left = cursor;
+        break;
+      case ';':
+        return left;
+    }
+
+    ++left;
+  }
 
   return right;
 }
@@ -2271,7 +2370,7 @@ int Parser::checkBrackets(int left, int right) {
 
 
 string& Parser::getPrevTokenWord(int left, int cursor) {
-  if (left < cursor) return ZERO_TOKEN_WORD;
+  if (cursor < left) return ZERO_TOKEN_WORD;
   return tokens->at(cursor).word;
 }
 

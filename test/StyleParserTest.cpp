@@ -34,7 +34,7 @@ TEST_F(StyleParserTest, parseImport) {
   int lexerError = lexer.tokenize(file->content, file->tokens);
   ASSERT_THAT(lexerError, ERROR_OK);
 
-  int parserError = parser.parseModule(&module);
+  int parserError = parser.parse(&module);
 
   ASSERT_THAT(parserError, ERROR_OK);
   ASSERT_THAT(module.imports.size(), 1);
@@ -56,7 +56,7 @@ TEST_F(StyleParserTest, parseClass) {
   int lexerError = lexer.tokenize(file->content, file->tokens);
   ASSERT_THAT(lexerError, ERROR_OK);
 
-  int parserError = parser.parseModule(&module);
+  int parserError = parser.parse(&module);
   ASSERT_THAT(parserError, ERROR_OK);
 
   ASSERT_THAT(module.classes.size(), 1);

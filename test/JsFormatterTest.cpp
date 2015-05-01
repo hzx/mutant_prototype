@@ -314,9 +314,11 @@ TEST_F(JsFormatterTest, formatStaticFunction) {
 
 
 TEST_F(JsFormatterTest, formatClass) {
-  string expected = "var Foo = module__.Foo = function() {\n"
-  "};\n"
-  "mutant.extends__(Foo, ui.Dialog);\n";
+string expected = R"(var Foo = module__.Foo = function() {
+};
+mutant.extends__(Foo, ui.Dialog);
+
+)";
 
   unique_ptr<Function> fn(new Function());
   fn->name = "Foo";
@@ -341,6 +343,7 @@ TEST_F(JsFormatterTest, formatStyleClass) {
   background: "url(\"img/image.png\") left top transparent no-repeat";
 };
 mutant.augment__(app, baseApp);
+
 )";
 
   unique_ptr<StyleClass> clas(new StyleClass());
@@ -832,7 +835,7 @@ TEST_F(JsFormatterTest, formatIn) {
 
 
 TEST_F(JsFormatterTest, formatIdentifier) {
-  string expected = "foo.flag = 3;\n";
+  string expected = "foo.flag = 3";
 
   unique_ptr<Identifier> i(new Identifier());
   i->names = {"foo", "flag"};

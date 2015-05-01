@@ -806,14 +806,15 @@ Module::Module() {
 
 
 Module::~Module() {
+  for (auto g: groups) delete g;
   for (auto i: imports) delete i;
   for (auto u: usings) delete u;
   for (auto e: enums) delete e;
   for (auto i: interfaces) delete i;
-  for (auto c: classes) delete c;
+  for (auto fd: functionDeclarations) delete fd;
   for (auto f: functions) delete f;
   for (auto v: variables) delete v;
-  for (auto g: groups) delete g;
+  for (auto c: classes) delete c;
 }
 
 
@@ -824,8 +825,15 @@ File* Module::newFile() {
 }
 
 
-StyleModule::~StyleModule() {
+StyleModule::StyleModule() {
   code = MODULE_MUS;
+}
+
+
+StyleModule::~StyleModule() {
+  for (auto g: groups) delete g;
+  for (auto i: imports) delete i;
+  for (auto c: classes) delete c;
 }
 
 
@@ -852,4 +860,20 @@ Environment::~Environment() {
   delete externType;
   for (auto module: styles) delete module;
   for (auto module: modules) delete module;
+}
+
+
+Module* Environment::getModule(vector<string>& names) {
+  for (auto m: modules)
+    if (m->names == names) return m;
+
+  return nullptr;
+}
+
+
+StyleModule* Environment::getStyleModule(vector<string>& names) {
+  for (auto m: styles)
+    if (m->names == names) return m;
+
+  return nullptr;
 }

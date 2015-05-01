@@ -22,8 +22,8 @@ void Options::parse(int argc, char const** argv) {
   parseConfig();
 
   // add cwd to paths
-  string cwd = getCwd();
-  paths.push_back(cwd);
+  string cwd = getCurrentDir();
+  /* paths.push_back(cwd); */
 
   int left = 1; // skip app name
   int right = argc;

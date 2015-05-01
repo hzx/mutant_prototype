@@ -22,9 +22,9 @@ using std::vector;
 
 class Task {
 public:
-  string moduleName;
+  vector<string> moduleNames;
   string output;
-  vector<string> skipModules;
+  vector<string> skipModuleNames;
 };
 
 
@@ -33,11 +33,14 @@ public:
   ~Project();
   vector<string> paths;
   vector<Task*> tasks;
+  string filename;
+  string content;
 };
 
 
 int parseProject(Project& project);
-int parseTask(Task* task);
+int parseProjectOption(Project& project, int left, int cursor);
+int parseTask(string& content, Task* task, int left, int right);
 
 
 #endif /* end of include guard: MUTANT_PROJECT_H */

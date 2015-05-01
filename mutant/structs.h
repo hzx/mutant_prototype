@@ -268,7 +268,8 @@ public:
   Type* type = nullptr;
   Node* node = nullptr;
   bool isClassMember = false;
-  bool isGlobal = false;
+  /* bool isGlobal = false; */
+  bool isModuleVariable = false;
 };
 
 
@@ -729,7 +730,6 @@ public:
   vector<string> names;
   string alias;
   BaseModule* module = nullptr;
-  /* bool isExtern; */
 };
 
 
@@ -906,6 +906,7 @@ public:
   string dir;
   string name; // TODO: clear dont need?!
   vector<string> names;
+  string output;
 
   size_t sortIndex = 0;
 };
@@ -927,15 +928,20 @@ public:
   vector<Function*> functions;
   vector<Variable*> variables;
   vector<Class*> classes;
+
+  vector<BaseModule*> formatOrder; // just links
 };
 
 
 class StyleModule: public BaseModule {
 public:
+  StyleModule();
   ~StyleModule();
   vector<StyleFileGroup*> groups;
   vector<StyleImport*> imports;
   vector<StyleClass*> classes;
+
+  vector<StyleModule*> formatOrder; // just links
 };
 
 
@@ -943,6 +949,8 @@ class Environment {
 public:
   Environment();
   ~Environment();
+  Module* getModule(vector<string>& names);
+  StyleModule* getStyleModule(vector<string>& names);
 
   VoidType* voidType;
   BoolType* boolType;

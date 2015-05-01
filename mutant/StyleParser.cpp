@@ -11,14 +11,15 @@ int const STYLE_AIM_VARIABLE = 1;
 int const STYLE_AIM_CLASS = 2;
 
 
-int StyleParser::parseModule(StyleModule* module) {
+int StyleParser::parse(StyleModule* module) {
   this->module = module;
 
   int cursor, right, prev;
 
   for (File* file: module->files) {
-    unique_ptr<FileGroup> fileGroup(new FileGroup());
+    unique_ptr<StyleFileGroup> fileGroup(new StyleFileGroup());
     fileGroup->file = file;
+    errorFile = file;
     this->fileGroup = fileGroup.get();
 
     tokens = &file->tokens;
@@ -30,6 +31,8 @@ int StyleParser::parseModule(StyleModule* module) {
       if (cursor < 0) return cursor;
       if (prev == cursor) return PARSER_PERPETUAL_LOOP;
     }
+
+    module->groups.push_back(fileGroup.release());
   }
 
   return ERROR_OK;
@@ -51,8 +54,10 @@ int StyleParser::parseGlobal(int left, int right) {
       {
         unique_ptr<StyleClass> clas(new StyleClass());
         int error = parseClass(clas.get(), left, right);
-        if (error >= 0)
+        if (error >= 0) {
+          fileGroup->classes.push_back(clas.get());
           module->classes.push_back(clas.release());
+        }
         return error;
       }
   }

@@ -1937,7 +1937,7 @@ bool Parser::isExpression(int left, int right) {
             cursor = findPairRoundBracket(i, right);
             if (cursor < 0) return false; // TODO: cleanup - propably not happen
             if (cursor == right) return false; // TODO: make error
-            i = cursor + 1;
+            i = cursor;
           }
         }
         break;
@@ -1948,7 +1948,7 @@ bool Parser::isExpression(int left, int right) {
             cursor = findPairBracket(i, right);
             if (cursor < 0) return false; // TODO: cleanup - propably not happen
             if (cursor == right) return false; // TODO: make error
-            i = cursor + 1;
+            i = cursor;
           }
         }
         break;

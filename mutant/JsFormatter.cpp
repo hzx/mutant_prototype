@@ -31,8 +31,8 @@ int JsFormatter::formatFileGroup(FileGroup* group) {
   for (auto var: group->variables) {
     error = formatGlobalVariable(var);
     if (error < 0) return error;
-    *store << '\n';
   }
+  if (not group->variables.empty()) *store << '\n';
 
   for (auto clas: group->classes) {
     error = formatClass(clas);
@@ -442,13 +442,16 @@ int JsFormatter::formatClass(Class* clas) {
   }
 
   // non static variables in constructor
+  bool haveStaticVar = false;
   for (auto var: clas->variables) {
     if (var->isStatic) {
+      haveStaticVar = true;
       error = formatStaticVariable(var);
       if (error < 0) return error;
-    *store << '\n';
+      /* *store << '\n'; */
     }
   }
+  if (haveStaticVar) *store << '\n';
 
   for (auto fn: clas->functions) {
     if (fn->isStatic) {
@@ -1529,6 +1532,11 @@ int JsFormatter::formatRightNode(Node* node) {
         Index* n = reinterpret_cast<Index*>(node);
         return formatIndex(n);
       }
+    case Node::IN:
+      {
+        In* n = reinterpret_cast<In*>(node);
+        return formatIn(n);
+      }
 
     case Node::BREAK:
       *store << "break";
@@ -1542,6 +1550,10 @@ int JsFormatter::formatRightNode(Node* node) {
         return formatTag(tag);
       }
   }
+
+  ostringstream buf;
+  buf << "unknown node, code: " << node->code << '\n';
+  errorMsg = buf.str();
 
   return JSFORMATTER_UKNOWN_NODE_ERROR;
 }

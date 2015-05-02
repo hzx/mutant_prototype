@@ -1952,6 +1952,13 @@ bool Parser::isExpression(int left, int right) {
           }
         }
         break;
+      case '{':
+        {
+          cursor = findPairCurlyBracket(i, right);
+          if (cursor == right) return false; // TODO: make error;
+          i = cursor;
+        }
+        break;
       case '=':
         {
           string& next = getNextTokenWord(right, i + 1);

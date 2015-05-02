@@ -852,7 +852,7 @@ TEST_F(JsFormatterTest, formatIdentifier) {
 
 
 TEST_F(JsFormatterTest, formatExpression) {
-  string expected = "(a - b) * c";
+  string expected = "a - b * c";
 
   unique_ptr<Identifier> a(new Identifier());
   a->names = {"a"};

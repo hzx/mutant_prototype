@@ -549,7 +549,8 @@ TEST_F(ParserTest, parseSwitch) {
 
 TEST_F(ParserTest, parseFor) {
   file->content = "int main() {"
-    "for int i = 0; i < max; ++i {" "a = 3;"
+    "for int i = 0; i < max; ++i {"
+    "  a = 3;"
     "}"
   "}";
 

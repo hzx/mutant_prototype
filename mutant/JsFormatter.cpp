@@ -694,6 +694,7 @@ int JsFormatter::formatFor(For* fr) {
 
   decIndent();
 
+  storeIndent();
   *store << "}\n";
 
   return ERROR_OK;
@@ -1010,7 +1011,7 @@ int JsFormatter::formatNew(New* n) {
 
 
 int JsFormatter::formatDelete(Delete* del) {
-  storeIndent();
+  /* storeIndent(); */
   *store << "delete ";
 
   int error = formatRightNode(del->node);
@@ -1580,6 +1581,11 @@ int JsFormatter::formatBlockNode(Node* node) {
         int error = formatFunctionCall(n);
         *store << ";\n";
         return error;
+      }
+    case Node::DELETE:
+      {
+        Delete* n = reinterpret_cast<Delete*>(node);
+        return formatDelete(n);
       }
     case Node::INDEX:
       {

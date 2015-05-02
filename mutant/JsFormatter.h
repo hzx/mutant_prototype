@@ -86,7 +86,7 @@ public:
   int formatRightNode(Node* node);
   int formatBlockNode(Node* node);
   void formatNames(vector<string>& names);
-  int formatOperatorNode(Node* node);
+  int formatOperatorNode(Node* node, Node* parent);
   int format(vector<Module*>& modules, Module* module);
 
   void incIndent();

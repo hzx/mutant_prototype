@@ -1048,12 +1048,12 @@ int JsFormatter::formatIndex(Index* index) {
 
 
 int JsFormatter::formatIn(In* in) {
-  int error = formatOperatorNode(in->left);
+  int error = formatOperatorNode(in->left, in);
   if (error < 0) return error;
 
   *store << " in ";
 
-  error = formatOperatorNode(in->right);
+  error = formatOperatorNode(in->right, in);
   if (error < 0) return error;
 
   return ERROR_OK;
@@ -1133,12 +1133,12 @@ int JsFormatter::formatDicLiteral(DicLiteral* dic) {
 
 
 int JsFormatter::formatAdd(Add* node) {
-  int error = formatOperatorNode(node->left);
+  int error = formatOperatorNode(node->left, node);
   if (error < 0) return error;
 
   *store << " + ";
 
-  error = formatOperatorNode(node->right);
+  error = formatOperatorNode(node->right, node);
   if (error < 0) return error;
 
   return ERROR_OK;
@@ -1153,12 +1153,12 @@ int JsFormatter::formatAddPrefix(AddPrefix* node) {
 
 
 int JsFormatter::formatSub(Sub* node) {
-  int error = formatOperatorNode(node->left);
+  int error = formatOperatorNode(node->left, node);
   if (error < 0) return error;
 
   *store << " - ";
 
-  error = formatOperatorNode(node->right);
+  error = formatOperatorNode(node->right, node);
   if (error < 0) return error;
 
   return ERROR_OK;
@@ -1173,12 +1173,12 @@ int JsFormatter::formatSubPrefix(SubPrefix* node) {
 
 
 int JsFormatter::formatMul(Mul* node) {
-  int error = formatOperatorNode(node->left);
+  int error = formatOperatorNode(node->left, node);
   if (error < 0) return error;
 
   *store << " * ";
 
-  error = formatOperatorNode(node->right);
+  error = formatOperatorNode(node->right, node);
   if (error < 0) return error;
 
   return ERROR_OK;
@@ -1186,12 +1186,12 @@ int JsFormatter::formatMul(Mul* node) {
 
 
 int JsFormatter::formatDiv(Div* node) {
-  int error = formatOperatorNode(node->left);
+  int error = formatOperatorNode(node->left, node);
   if (error < 0) return error;
 
   *store << " / ";
 
-  error = formatOperatorNode(node->right);
+  error = formatOperatorNode(node->right, node);
   if (error < 0) return error;
 
   return ERROR_OK;
@@ -1199,12 +1199,12 @@ int JsFormatter::formatDiv(Div* node) {
 
 
 int JsFormatter::formatIdiv(Idiv* node) {
-  int error = formatOperatorNode(node->left);
+  int error = formatOperatorNode(node->left, node);
   if (error < 0) return error;
 
   *store << " % ";
 
-  error = formatOperatorNode(node->right);
+  error = formatOperatorNode(node->right, node);
   if (error < 0) return error;
 
   return ERROR_OK;
@@ -1212,12 +1212,12 @@ int JsFormatter::formatIdiv(Idiv* node) {
 
 
 int JsFormatter::formatLess(Less* node) {
-  int error = formatOperatorNode(node->left);
+  int error = formatOperatorNode(node->left, node);
   if (error < 0) return error;
 
   *store << " < ";
 
-  error = formatOperatorNode(node->right);
+  error = formatOperatorNode(node->right, node);
   if (error < 0) return error;
 
   return ERROR_OK;
@@ -1225,12 +1225,12 @@ int JsFormatter::formatLess(Less* node) {
 
 
 int JsFormatter::formatLessEqual(LessEqual* node) {
-  int error = formatOperatorNode(node->left);
+  int error = formatOperatorNode(node->left, node);
   if (error < 0) return error;
 
   *store << " <= ";
 
-  error = formatOperatorNode(node->right);
+  error = formatOperatorNode(node->right, node);
   if (error < 0) return error;
 
   return ERROR_OK;
@@ -1238,12 +1238,12 @@ int JsFormatter::formatLessEqual(LessEqual* node) {
 
 
 int JsFormatter::formatGreater(Greater* node) {
-  int error = formatOperatorNode(node->left);
+  int error = formatOperatorNode(node->left, node);
   if (error < 0) return error;
 
   *store << " > ";
 
-  error = formatOperatorNode(node->right);
+  error = formatOperatorNode(node->right, node);
   if (error < 0) return error;
 
   return ERROR_OK;
@@ -1251,12 +1251,12 @@ int JsFormatter::formatGreater(Greater* node) {
 
 
 int JsFormatter::formatGreaterEqual(GreaterEqual* node) {
-  int error = formatOperatorNode(node->left);
+  int error = formatOperatorNode(node->left, node);
   if (error < 0) return error;
 
   *store << " >= ";
 
-  error = formatOperatorNode(node->right);
+  error = formatOperatorNode(node->right, node);
   if (error < 0) return error;
 
   return ERROR_OK;
@@ -1271,12 +1271,12 @@ int JsFormatter::formatNot(Not* node) {
 
 
 int JsFormatter::formatAnd(And* node) {
-  int error = formatOperatorNode(node->left);
+  int error = formatOperatorNode(node->left, node);
   if (error < 0) return error;
 
   *store << " && ";
 
-  error = formatOperatorNode(node->right);
+  error = formatOperatorNode(node->right, node);
   if (error < 0) return error;
 
   return ERROR_OK;
@@ -1284,12 +1284,12 @@ int JsFormatter::formatAnd(And* node) {
 
 
 int JsFormatter::formatOr(Or* node) {
-  int error = formatOperatorNode(node->left);
+  int error = formatOperatorNode(node->left, node);
   if (error < 0) return error;
 
   *store << " || ";
 
-  error = formatOperatorNode(node->right);
+  error = formatOperatorNode(node->right, node);
   if (error < 0) return error;
 
   return ERROR_OK;
@@ -1297,12 +1297,12 @@ int JsFormatter::formatOr(Or* node) {
 
 
 int JsFormatter::formatEqual(Equal* node) {
-  int error = formatOperatorNode(node->left);
+  int error = formatOperatorNode(node->left, node);
   if (error < 0) return error;
 
   *store << " === ";
 
-  error = formatOperatorNode(node->right);
+  error = formatOperatorNode(node->right, node);
   if (error < 0) return error;
 
   return ERROR_OK;
@@ -1310,12 +1310,12 @@ int JsFormatter::formatEqual(Equal* node) {
 
 
 int JsFormatter::formatNotEqual(NotEqual* node) {
-  int error = formatOperatorNode(node->left);
+  int error = formatOperatorNode(node->left, node);
   if (error < 0) return error;
 
   *store << " !== ";
 
-  error = formatOperatorNode(node->right);
+  error = formatOperatorNode(node->right, node);
   if (error < 0) return error;
 
   return ERROR_OK;
@@ -1665,18 +1665,21 @@ void JsFormatter::formatNames(vector<string>& names) {
 }
 
 
-int JsFormatter::formatOperatorNode(Node* node) {
+int JsFormatter::formatOperatorNode(Node* node, Node* parent) {
   int error;
   if (node != nullptr) {
     if (isOperatorNode(node)) {
-      *store << '(';
-      error = formatRightNode(node);
-      if (error < 0) return error;
-      *store << ')';
+      if (parent->priority == node->priority) {
+        error = formatRightNode(node);
+      } else {
+        *store << '(';
+        error = formatRightNode(node);
+        *store << ')';
+      }
     } else {
       error = formatRightNode(node);
-      if (error < 0) return error;
     }
+    if (error < 0) return error;
   }
   return ERROR_OK;
 }

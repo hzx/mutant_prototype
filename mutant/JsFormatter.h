@@ -55,6 +55,8 @@ public:
   int formatTagProps(vector<TagProp*>& props);
   int formatTagEvents(vector<TagEvent*>& events);
   int formatTagChilds(vector<Tag*>& childs);
+  int formatTry(Try* try_);
+  int formatCatch(Catch* catch_);
   int formatFunctionCall(FunctionCall* fc);
   int formatLambda(Lambda* lambda);
   int formatNew(New* n);

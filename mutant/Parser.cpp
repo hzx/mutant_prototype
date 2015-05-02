@@ -1521,6 +1521,45 @@ int Parser::parseTag(Tag* tag, int left, int right) {
 }
 
 
+int Parser::parseTry(Try* try_, int left, int right) {
+  if (tokens->at(left).word[0] != '{') return TRY_OPEN_BRACKET_ERROR;
+  int closeBracket = findPairCurlyBracket(left, right);
+  if (closeBracket == right) return TRY_CLOSE_BRACKET_ERROR;
+
+  // parse nodes
+  int error = parseNodes(try_->nodes, left + 1, closeBracket);
+  if (error < 0) return error;
+
+  // parse catches
+  left = closeBracket + 1;
+  int openBracket;
+  while (tokens->at(left).word == "catch") {
+    ++left;
+    openBracket = findSymbol('{', left, right);
+    if (openBracket == right) return CATCH_OPEN_BRACKET_ERROR;
+    closeBracket = findPairCurlyBracket(openBracket, right);
+    if (closeBracket == right) return CATCH_CLOSE_BRACKET_ERROR;
+
+    unique_ptr<Catch> catch_(new Catch());
+
+    if (openBracket - left == 0) return CATCH_NO_PARAMS_ERROR;
+    error = parseFunctionParams(catch_->params, left, openBracket);
+    if (error < 0) return error;
+
+    if (closeBracket - openBracket > 1) {
+      error = parseNodes(catch_->nodes, openBracket + 1, closeBracket);
+      if (error < 0) return error;
+    }
+
+    try_->catches.push_back(catch_.release());
+
+    left = closeBracket + 1;
+  }
+
+  return closeBracket + 1;
+}
+
+
 int Parser::parseTagChilds(Tag* tag, int left, int right) {
   while (left < right) {
     if (tokens->at(left).word[0] == '<') { // parse tags
@@ -1625,6 +1664,7 @@ int Parser::parseIdentifier(Identifier* identifier, int left, int right) {
 }
 
 
+// TODO: optimize word detection by switch and first symbol
 int Parser::parseNodesOnce(vector<Node*>& nodes, int left, int right) {
   if (right - left <= 0) return right;
 
@@ -1703,6 +1743,13 @@ int Parser::parseNodesOnce(vector<Node*>& nodes, int left, int right) {
 
     nodes.push_back(new Continue());
     return left + 2;
+  }
+
+  if (token.word == "try") {
+    unique_ptr<Try> try_(new Try());
+    int error = parseTry(try_.get(), left + 1, right);
+    if (error >= 0) nodes.push_back(try_.release());
+    return error;
   }
 
   int aim = detectNodes(left, right);

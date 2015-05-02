@@ -45,6 +45,7 @@ public:
   int parseTagAttributes(Tag* tag, int left, int right);
   int parseTag(Tag* tag, int left, int right);
   int parseTagChilds(Tag* tag, int left, int right);
+  int parseTry(Try* try_, int left, int right);
   int parseArrayDeclaration(ArrayLiteral* array, int left, int right);
   int parseDicDeclaration(DicLiteral* dic, int left, int right);
   int parseIdentifier(Identifier* identifier, int left, int right);

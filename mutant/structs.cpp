@@ -705,29 +705,35 @@ Tag::~Tag() {
 }
 
 
-Import::Import() {
+Catch::~Catch() {
+  for (auto param: params) delete param;
+  for (auto node: nodes) delete node;
 }
 
 
-Using::Using() {
-  type = nullptr;
+Try::Try() {
+  code = Node::TRY;
 }
 
 
-FunctionDeclaration::FunctionDeclaration()
-    : returnType(nullptr) {
+Try::~Try() {
+  for (auto node: nodes) delete node;
+  for (auto catch_: catches) delete catch_;
+}
+
+
+FunctionDeclaration::FunctionDeclaration() {
   code = Type::FUNCTION_DECLARATION;
 }
 
 
-Function::Function()
-    : returnType(nullptr)
-    , clas(nullptr) {
+Function::Function() {
   code = Node::FUNCTION;
 }
 
 
 Function::~Function() {
+  for (auto param: params) delete param;
   for (auto node: nodes) delete node;
 }
 
@@ -742,15 +748,8 @@ Variable::~Variable() {
 }
 
 
-EnumAttribute::EnumAttribute()
-    : value(0) {
-}
-
-
-Enum::Enum()
-    : clas(nullptr) {
+Enum::Enum() {
   code = Type::ENUM;
-  /* typeName = "int"; */
 }
 
 

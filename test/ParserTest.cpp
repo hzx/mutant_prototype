@@ -469,6 +469,48 @@ TEST_F(ParserTest, parseIf) {
   ASSERT_THAT(ifn->else_->nodes[0]->code, Node::IDENTIFIER);
 }
 
+
+TEST_F(ParserTest, parseTry) {
+  file->content = R"(
+bool test() {
+  try {
+    foo();
+  } catch (Exception e) {
+    return true;
+  } catch (object e) {
+    return false;
+  }
+}
+)";
+
+  int lexerError = lexer.tokenize(file->content, file->tokens);
+  ASSERT_THAT(lexerError, ERROR_OK);
+
+  int parserError = parser.parse(&module);
+  ASSERT_THAT(parserError, ERROR_OK);
+  ASSERT_THAT(module.functions.size(), 1);
+
+  Function* func = module.functions[0];
+
+  ASSERT_THAT(func->nodes.size(), 1);
+  ASSERT_THAT(func->nodes[0]->code, Node::TRY);
+
+  Try* try_ = reinterpret_cast<Try*>(func->nodes[0]);
+
+  ASSERT_THAT(try_->nodes.size(), 1);
+  ASSERT_THAT(try_->catches.size(), 2);
+
+  Catch* catch1 = try_->catches[0];
+  Catch* catch2 = try_->catches[1];
+
+  ASSERT_THAT(catch1->params.size(), 1);
+  ASSERT_THAT(catch1->nodes.size(), 1);
+
+  ASSERT_THAT(catch2->params.size(), 1);
+  ASSERT_THAT(catch2->nodes.size(), 1);
+}
+
+
 TEST_F(ParserTest, parseIfFor) {
   file->content = R"(
 int main() {

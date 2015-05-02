@@ -75,6 +75,8 @@ public:
   int processWhile(While* while_);
   int processReturn(Return* return_);
   int processTag(Tag* tag);
+  int processTry(Try* try_);
+  int processCatch(Catch* catch_);
 
   int processBlockNode(Node* node);
   int processRightNode(Node* node);

@@ -498,6 +498,7 @@ int JsFormatter::formatStyleProperty(StyleProperty* prop) {
   bool isFirst = true;
   string prev = " ";
   *store << prop->name << ": \"";
+
   for (auto value: prop->values) {
     if (isFirst) isFirst = false;
     else {
@@ -510,6 +511,7 @@ int JsFormatter::formatStyleProperty(StyleProperty* prop) {
     } else *store << value;
     prev = value;
   }
+
   *store << "\";\n";
 
   return ERROR_OK;
@@ -924,6 +926,61 @@ int JsFormatter::formatTagChilds(vector<Tag*>& childs) {
     decIndent();
     *store << "\n]";
   }
+  return ERROR_OK;
+}
+
+
+int JsFormatter::formatTry(Try* try_) {
+  *store << "try {\n";
+  incIndent();
+
+  int error;
+  for (auto node: try_->nodes) {
+    storeIndent();
+    error = formatBlockNode(node);
+    if (error < 0) return error;
+  }
+
+  decIndent();
+
+  storeIndent();
+  if (try_->catches.empty()) {
+    *store << "}\n";
+  } else {
+    *store << '}';
+  }
+
+  for (auto catch_: try_->catches) {
+    /* storeIndent(); */
+    error = formatCatch(catch_);
+    if (error < 0) return error;
+    storeIndent();
+    *store << '}';
+  }
+  *store << '\n';
+
+  return ERROR_OK;
+}
+
+
+int JsFormatter::formatCatch(Catch* catch_) {
+  *store << " catch (";
+
+  formatFunctionParams(catch_->params);
+
+  *store << ") {\n";
+  incIndent();
+
+  int error;
+  for (auto node: catch_->nodes) {
+    storeIndent();
+    error = formatBlockNode(node);
+    if (error < 0) return error;
+  }
+
+  decIndent();
+  /* *store << "}\n"; */
+
   return ERROR_OK;
 }
 
@@ -1646,6 +1703,11 @@ int JsFormatter::formatBlockNode(Node* node) {
         int error = formatSubPrefix(n);
         *store << ";\n";
         return error;
+      }
+    case Node::TRY:
+      {
+        Try* n = reinterpret_cast<Try*>(node);
+        return formatTry(n);
       }
     default:
       ostringstream buf;

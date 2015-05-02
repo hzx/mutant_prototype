@@ -176,7 +176,9 @@ public:
     RETURN = 52,
     BREAK = 53,
     CONTINUE = 54,
-    TAG = 55
+    TAG = 55,
+
+    TRY = 56
   };
 
   int code = 0;
@@ -723,10 +725,25 @@ public:
 };
 
 
+class Catch: public BlockNode {
+public:
+  ~Catch();
+  vector<Variable*> params;
+  vector<Node*> nodes;
+};
+
+
+class Try: public BlockNode {
+public:
+  Try();
+  ~Try();
+  vector<Node*> nodes;
+  vector<Catch*> catches;
+};
+
+
 class Import {
 public:
-  Import();
-
   vector<string> names;
   string alias;
   BaseModule* module = nullptr;
@@ -735,8 +752,6 @@ public:
 
 class Using {
 public:
-  Using();
-
   vector<string> names;
   string alias;
   Type* type = nullptr;
@@ -748,7 +763,7 @@ public:
   FunctionDeclaration();
 
   vector<string> returnTypeNames;
-  Type* returnType;
+  Type* returnType = nullptr;
   vector<Variable*> params;
   Class* clas = nullptr;
 };
@@ -763,12 +778,12 @@ public:
   Type* returnType = nullptr;
   string name;
   vector<Variable*> params;
+  vector<Node*> nodes;
   bool isConstructor = false;
   bool isOverride = false;
   bool isBind = false;
   bool isStatic = false;
   Class* clas = nullptr;
-  vector<Node*> nodes;
 };
 
 
@@ -788,9 +803,8 @@ public:
 
 class EnumAttribute {
 public:
-  EnumAttribute();
   string name;
-  int value;
+  int value = 0;
 };
 
 
@@ -798,9 +812,8 @@ class Enum: public Type {
 public:
   Enum();
   ~Enum();
-  /* string typeName; // by default int, just in case we enlarge integer types */
   vector<EnumAttribute*> attributes;
-  Class* clas = nullptr;
+  Class* clas = nullptr; // link
 };
 
 

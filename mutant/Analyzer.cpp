@@ -801,6 +801,49 @@ int Analyzer::processTag(Tag* tag) {
 }
 
 
+int Analyzer::processTry(Try* try_) {
+  blocks.push(try_);
+
+  int error;
+  for (auto node: try_->nodes) {
+    error = processBlockNode(node);
+    if (error < 0) {
+      blocks.pop();
+      return error;
+    }
+  }
+
+  blocks.pop();
+
+  for (auto catch_: try_->catches) {
+    blocks.push(catch_);
+
+    error = processCatch(catch_);
+    if (error < 0) {
+      blocks.pop();
+      return error;
+    }
+
+    blocks.pop();
+  }
+
+  return ERROR_OK;
+}
+
+
+int Analyzer::processCatch(Catch* catch_) {
+  int error = processFunctionParams(catch_->params);
+  if (error < 0) return error;
+
+  for (auto node: catch_->nodes) {
+    error = processBlockNode(node);
+    if (error < 0) return error;
+  }
+
+  return ERROR_OK;
+}
+
+
 int Analyzer::processBlockNode(Node* node) {
   switch (node->code) {
     case Node::IDENTIFIER:
@@ -911,6 +954,11 @@ int Analyzer::processBlockNode(Node* node) {
     case Node::BREAK:
     case Node::CONTINUE:
       break; // skip
+    case Node::TRY:
+      {
+        Try* n = reinterpret_cast<Try*>(node);
+        return processTry(n);
+      }
     default:
       return ANALYZER_UNKNOWN_BLOCK_NODE;
   }

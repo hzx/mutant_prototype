@@ -1122,6 +1122,7 @@ int JsFormatter::formatDicLiteral(DicLiteral* dic) {
     else *store << ", ";
     error = formatRightNode(pair->key);
     if (error < 0) return error;
+    *store << ": ";
     error = formatRightNode(pair->value);
     if (error < 0) return error;
   }
@@ -1606,6 +1607,11 @@ int JsFormatter::formatBlockNode(Node* node) {
       {
         ForEach* n = reinterpret_cast<ForEach*>(node);
         return formatForEach(n);
+      }
+    case Node::FOR_IN:
+      {
+        ForIn* n = reinterpret_cast<ForIn*>(node);
+        return formatForIn(n);
       }
     case Node::WHILE:
       {

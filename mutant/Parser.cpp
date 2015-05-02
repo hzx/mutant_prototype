@@ -483,8 +483,8 @@ int Parser::parseFunctionCallParams(vector<Node*>& params, int left, int right) 
   int error;
   Node* node;
   while (cursor < right) {
-    comma = findSymbol(',', cursor, right);
-    node = nullptr;
+    comma = findCommaDelimiter(cursor, right);
+    node = nullptr; // TODO: not need?!
     error = parseNode(node, cursor, comma);
     if (error < 0) return error; // contains error
     /* if (node == nullptr) return -12300; */
@@ -2283,6 +2283,9 @@ int Parser::findCommaDelimiter(int left, int right) {
         left = findPairRoundBracket(left, right);
         if (left == right) return right;
         break;
+      case '{':
+        left = findPairCurlyBracket(left, right);
+        if (left == right) return right;
     }
   }
   return right;

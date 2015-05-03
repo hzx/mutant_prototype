@@ -1652,7 +1652,6 @@ int JsFormatter::formatBlockNode(Node* node) {
       {
         Index* n = reinterpret_cast<Index*>(node);
         int error = formatIndex(n);
-        *store << ";\n";
         return error;
       }
     case Node::IF:

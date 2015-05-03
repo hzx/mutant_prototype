@@ -21,6 +21,7 @@ mutant.register__ = function(names, module) {
   for (var i = 0; i < names.length - 1; ++i)
     if (!(names[i] in mutant)) mutant[names[i]] = {};
   mutant[names[names.length - 1]] = module;
+  if ("main" in module) module.main();
 };
 
 mutant.extends__ = function(child, base) {

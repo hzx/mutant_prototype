@@ -817,10 +817,14 @@ int JsFormatter::formatContinue() {
 
 
 int JsFormatter::formatReturn(Return* ret) {
-  *store << "return ";
-  int error = formatRightNode(ret->node);
-  if (error < 0) return error;
-  *store << ";\n";
+  if (ret->node != nullptr) {
+    *store << "return ";
+    int error = formatRightNode(ret->node);
+    if (error < 0) return error;
+    *store << ";\n";
+  } else {
+    *store << "return;\n";
+  }
 
   return ERROR_OK;
 }

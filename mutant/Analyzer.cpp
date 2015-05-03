@@ -251,9 +251,15 @@ int Analyzer::processFunctionCall(FunctionCall* fcall) {
       fcall->isClassMember = true;
     }
 
+    int error;
+    for (auto param: fcall->params) {
+      error = processRightNode(param);
+      if (error < 0) return error;
+    }
+
     if (fcall->tail != nullptr) {
       fcall->tail->dontTouch = true;
-      int error = processRightNode(fcall->tail);
+      error = processRightNode(fcall->tail);
       if (error < 0) return error;
     }
 

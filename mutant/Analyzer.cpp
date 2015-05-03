@@ -4,6 +4,7 @@
 
 
 // TODO: implement function, function call params check, types check
+// TODO: function params name identifiers must not marked isClassMember
 
 
 int Analyzer::process(Environment* env, Module* module) {
@@ -120,9 +121,7 @@ int Analyzer::processClass(Class* clas) {
   for (auto fn: clas->functions) {
     fn->clas = clas;
 
-    blocks.push(fn);
     error = processFunction(fn);
-    blocks.pop();
     if (error < 0) return error;
   }
 
@@ -266,6 +265,7 @@ int Analyzer::processFunctionCall(FunctionCall* fcall) {
 
 
 int Analyzer::processLambda(Lambda* lambda) {
+  if (not blocks.empty()) lambda->parent = blocks.top();
   blocks.push(lambda);
 
   int error = processFunctionParams(lambda->params);
@@ -563,6 +563,7 @@ int Analyzer::processIn(In* in) {
 
 
 int Analyzer::processIf(If* if_) {
+  if_->parent = blocks.top();
   blocks.push(if_);
 
   int error = processRightNode(if_->condition);
@@ -582,6 +583,7 @@ int Analyzer::processIf(If* if_) {
   blocks.pop();
 
   if (if_->else_ != nullptr) {
+    if_->else_->parent = blocks.top();
     blocks.push(if_->else_);
 
     for (auto node: if_->else_->nodes) {
@@ -618,6 +620,7 @@ int Analyzer::processSwitch(Switch* switch_) {
 
 
 int Analyzer::processCase(Case* case_) {
+  case_->parent = blocks.top();
   blocks.push(case_);
 
   int error;
@@ -644,6 +647,7 @@ int Analyzer::processCase(Case* case_) {
 
 
 int Analyzer::processFor(For* for_) {
+  for_->parent = blocks.top();
   blocks.push(for_);
 
   int error;
@@ -684,6 +688,7 @@ int Analyzer::processFor(For* for_) {
 
 
 int Analyzer::processForEach(ForEach* forEach) {
+  forEach->parent = blocks.top();
   blocks.push(forEach);
 
   int error = processBlockNode(forEach->value);
@@ -713,6 +718,7 @@ int Analyzer::processForEach(ForEach* forEach) {
 
 
 int Analyzer::processForIn(ForIn* forIn) {
+  forIn->parent = blocks.top();
   blocks.push(forIn);
 
   int error = processBlockNode(forIn->value);
@@ -742,6 +748,7 @@ int Analyzer::processForIn(ForIn* forIn) {
 
 
 int Analyzer::processWhile(While* while_) {
+  while_->parent = blocks.top();
   blocks.push(while_);
 
   int error = processRightNode(while_->condition);
@@ -802,6 +809,7 @@ int Analyzer::processTag(Tag* tag) {
 
 
 int Analyzer::processTry(Try* try_) {
+  try_->parent = blocks.top();
   blocks.push(try_);
 
   int error;
@@ -816,6 +824,7 @@ int Analyzer::processTry(Try* try_) {
   blocks.pop();
 
   for (auto catch_: try_->catches) {
+    catch_->parent = blocks.top();
     blocks.push(catch_);
 
     error = processCatch(catch_);

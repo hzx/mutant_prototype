@@ -1,3 +1,4 @@
+#include <iostream>
 #include <sstream>
 #include "JsFormatter.h"
 #include "helpers.h"
@@ -67,7 +68,14 @@ int JsFormatter::formatModule(Module* module, ostream& store_) {
   }
   if (not module->usings.empty()) store_ << '\n';
 
+  // debug
+  std::cout << "[";
+  saveNames(module->names, std::cout);
+  std::cout << "]-----------------------------\n";
+
   for (auto group: module->groups) {
+    // debug
+    std::cout << "formatFileGroup: " << group->file->name << '\n';
     error = formatFileGroup(group);
     if (error < 0) return error;
   }
@@ -474,8 +482,11 @@ int JsFormatter::formatStyleClass(StyleClass* clas) {
   incIndent();
 
   int error;
+  bool isFirst = true;
   for (auto prop: clas->properties) {
     storeIndent();
+    if (isFirst) isFirst = false;
+    else *store << ",\n";
     error = formatStyleProperty(prop);
     if (error < 0) return error;
   }
@@ -511,8 +522,7 @@ int JsFormatter::formatStyleProperty(StyleProperty* prop) {
     } else *store << value;
     prev = value;
   }
-
-  *store << "\";\n";
+  *store << '"';
 
   return ERROR_OK;
 }
@@ -831,7 +841,14 @@ int JsFormatter::formatReturn(Return* ret) {
 
 
 int JsFormatter::formatTag(Tag* tag) {
+  if (tag->isRaw) {
+    if (tag->isClassMember) *store << "this.";
+    formatNames(tag->names);
+    return ERROR_OK;
+  }
+
   int error;
+
   if (isTagName(tag->names)) { // tag
     *store << "web.tag(\"";
     formatNames(tag->names);
@@ -928,7 +945,9 @@ int JsFormatter::formatTagChilds(vector<Tag*>& childs) {
     }
 
     decIndent();
-    *store << "\n]";
+    *store << '\n';
+    storeIndent();
+    *store << ']';
   }
   return ERROR_OK;
 }

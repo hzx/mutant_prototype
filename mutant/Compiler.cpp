@@ -18,13 +18,17 @@ char MUTANT_SYSTEM_JS[] = R"(
 window.mutant = window.mutant || {};
 
 mutant.register__ = function(names, module) {
-  for (var i = 0; i < names.length - 1; ++i)
-    if (!(names[i] in mutant)) mutant[names[i]] = {};
-  mutant[names[names.length - 1]] = module;
+  var ns = mutant;
+  for (var i = 0; i < names.length - 1; ++i) {
+    if (!(names[i] in ns)) ns[names[i]] = {};
+    ns = ns[names[i]];
+  }
+  ns[names[names.length - 1]] = module;
   if ("main" in module) module.main();
 };
 
 mutant.extends__ = function(child, base) {
+  if (!!base === false) console.log(child);
   var tmp = new Function();
   tmp.prototype = base.prototype;
   child.prototype = new tmp();
@@ -241,12 +245,13 @@ int Compiler::compileCommonModule(vector<string>& names, BaseModule*& moduleResu
   string dir = loader.searchModuleDir(names, project->paths);
   if (dir.empty()) {
     cout << "module not found: ";
-    bool isFirst = true;
-    for (auto name: names) {
-      if (isFirst) isFirst = false;
-      else cout << '.';
-      cout << name;
-    }
+    saveNames(names, cout);
+    /* bool isFirst = true; */
+    /* for (auto name: names) { */
+    /*   if (isFirst) isFirst = false; */
+    /*   else cout << '.'; */
+    /*   cout << name; */
+    /* } */
     cout << "\n";
     return LOADER_MODULE_NOT_FOUND_ERROR;
   }
@@ -322,7 +327,12 @@ int Compiler::compileModule(Module* module) {
   BaseModule* importModule;
   for (auto import: module->imports) {
     error = compileCommonModule(import->names, importModule);
-    if (error < 0) return error;
+    if (error < 0) {
+      ostringstream buf;
+      saveNames(module->names, buf);
+      errorMsg = buf.str();
+      return error;
+    }
     import->module = importModule;
   }
 

@@ -695,7 +695,7 @@ TEST_F(ParserTest, parseForIn) {
 
 TEST_F(ParserTest, parseWhile) {
   file->content = "int main() {"
-    "while value {"
+    "while a < value {"
       "flag = true;"
     "}"
   "}";
@@ -715,7 +715,7 @@ TEST_F(ParserTest, parseWhile) {
   While* wh = reinterpret_cast<While*>(fn->nodes[0]);
 
   ASSERT_TRUE(wh->condition != nullptr);
-  ASSERT_THAT(wh->condition->code, Node::IDENTIFIER);
+  ASSERT_THAT(wh->condition->code, Node::LESS);
   ASSERT_THAT(wh->nodes.size(), 1);
   ASSERT_THAT(wh->nodes[0]->code, Node::IDENTIFIER);
 

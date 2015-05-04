@@ -312,3 +312,34 @@ void saveNames(vector<string>& names, ostream& store) {
     store << name;
   }
 }
+
+
+void printGroups(vector<FileGroup*>& groups, ostream& store) {
+  for (auto group: groups) {
+    store << group->sortIndex << ". " << group->file->name << " - " << group->dependGroups.size() << " -- ";
+    for (auto dg: group->dependGroups) {
+      store << dg->file->name << '-' << dg->sortIndex << ' ';
+    }
+    store << '\n';
+  }
+}
+
+
+void addGroup(vector<FileGroup*>& groups, FileGroup* group) {
+  bool isIn = false;
+  for (auto gr: groups) if (gr == group) {
+    isIn = true;
+    break;
+  }
+  if (!isIn) groups.push_back(group);
+}
+
+
+void addStyleGroup(vector<StyleFileGroup*>& groups, StyleFileGroup* group) {
+  bool isIn = false;
+  for (auto gr: groups) if (gr == group) {
+    isIn = true;
+    break;
+  }
+  if (!isIn) groups.push_back(group);
+}

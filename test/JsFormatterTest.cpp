@@ -563,11 +563,18 @@ TEST_F(JsFormatterTest, formatForIn) {
 TEST_F(JsFormatterTest, formatWhile) {
   unique_ptr<While> w(new While());
   unique_ptr<Identifier> i(new Identifier());
+  unique_ptr<Identifier> i0(new Identifier());
+  unique_ptr<Less> less(new Less());
   i->names = {"flag"};
-  w->condition = i.release();
+  i0->names = {"a"};
+
+  less->left = i0.release();
+  less->right = i.release();
+  w->condition = less.release();
 
   unique_ptr<BoolLiteral> b(new BoolLiteral());
   b->value = false;
+
 
   unique_ptr<Identifier> i2(new Identifier());
   i2->names = {"flag"};
@@ -575,7 +582,7 @@ TEST_F(JsFormatterTest, formatWhile) {
 
   w->nodes.push_back(i2.release());
 
-  string expected = "while (flag) {\n"
+  string expected = "while (a < flag) {\n"
   "  flag = false;\n"
   "}\n";
 
@@ -623,7 +630,6 @@ TEST_F(JsFormatterTest, formatReturn) {
 }
 
 
-// TODO: implement
 TEST_F(JsFormatterTest, formatTag) {
   // span
   
@@ -684,8 +690,6 @@ TEST_F(JsFormatterTest, formatTag) {
   n_div->childs.push_back(n_input.release());
   n_div->childs.push_back(n_dialog.release());
 
-
-  // TODO: decide in wr about create element and view
   string expected = "web.tag(\"div\", null, [\"click\", this.onClick, \"mouseenter\", this.onMouseEnter], null, [\n"
   "  web.tag(\"span\", null, null, \"Hello, world\", null),\n"
   "  web.tag(\"input\", [\"style\", style.edit, \"value\", common.DEFAULT_EDIT_VALUE], null, null, null),\n"
@@ -697,6 +701,12 @@ TEST_F(JsFormatterTest, formatTag) {
 
   ASSERT_THAT(error, ERROR_OK);
   ASSERT_THAT(actual, expected);
+}
+
+
+// TODO: implement
+TEST_F(JsFormatterTest, formatTry) {
+  ASSERT_TRUE(false);
 }
 
 

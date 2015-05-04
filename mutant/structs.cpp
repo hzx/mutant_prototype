@@ -671,18 +671,8 @@ Continue::Continue() {
 }
 
 
-TagEvent::TagEvent()
-    : value(nullptr) {
-}
-
-
 TagEvent::~TagEvent() {
   delete value;
-}
-
-
-TagProp::TagProp()
-    : value(nullptr) {
 }
 
 
@@ -691,8 +681,7 @@ TagProp::~TagProp() {
 }
 
 
-Tag::Tag()
-    : value(nullptr) {
+Tag::Tag() {
   code = Node::TAG;
 }
 

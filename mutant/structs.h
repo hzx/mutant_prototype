@@ -697,7 +697,6 @@ public:
 
 class TagEvent {
 public:
-  TagEvent();
   ~TagEvent();
   string name;
   Node* value = nullptr;
@@ -706,7 +705,6 @@ public:
 
 class TagProp {
 public:
-  TagProp();
   ~TagProp();
   string name;
   Node* value = nullptr;
@@ -722,6 +720,8 @@ public:
   vector<TagProp*> props;
   vector<Tag*> childs;
   Node* value = nullptr;
+  bool isRaw = false;
+  bool isClassMember = false;
 };
 
 

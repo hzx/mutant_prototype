@@ -29,7 +29,6 @@ int Analyzer::processModule(Module* module) {
   }
 
   return sortModuleGroups(module);
-  /* return ERROR_OK; */
 }
 
 
@@ -146,7 +145,8 @@ int Analyzer::processStyleClass(StyleClass* clas) {
     if (group == styleFileGroup) continue; // skip current group
     for (auto oclas: group->classes)
       if (clas->superNames[0] == oclas->name)
-        styleFileGroup->dependGroups.push_back(group);
+        /* styleFileGroup->dependGroups.push_back(group); */
+        addStyleGroup(styleFileGroup->dependGroups, group);
   }
 
   return ERROR_OK;
@@ -790,6 +790,13 @@ int Analyzer::processTag(Tag* tag) {
 
   if (!isTagName(tag->names)) processGroupDepends(tag->names);
 
+  if (tag->isRaw) {
+    if (clas != nullptr) {
+      tag->isClassMember = isClassMemberName(clas, tag->names[0]);
+    }
+    return ERROR_OK;
+  }
+
   for (auto event: tag->events) {
     error = processRightNode(event->value);
     if (error < 0) return error;
@@ -1165,25 +1172,36 @@ int Analyzer::sortModuleGroups(Module* module) {
     sorted.push_back(group);
   }
 
-  for (size_t g = 0; g < module->groups.size(); ++g) {
-    group = module->groups[g];
-    if (not group->dependGroups.empty()) {
-      // move dependGroup before this group
-      for (auto dependGroup: group->dependGroups) {
-        if (group->sortIndex < dependGroup->sortIndex) { // swap groups
-          tmp = group->sortIndex;
-          group->sortIndex = dependGroup->sortIndex;
-          dependGroup->sortIndex = tmp;
-          sorted[tmp] = dependGroup;
-          sorted[group->sortIndex] = group;
+  // debug
+  std::cout << "BEFORE[groups before sort---------------------]\n";
+  printGroups(module->groups, std::cout);
+
+  bool isSwap;
+  for (int i = 0; i < module->groups.size(); ++i) {
+    isSwap = false;
+    for (auto group: module->groups) {
+      if (not group->dependGroups.empty()) {
+        // move dependGroup before this group
+        for (auto dependGroup: group->dependGroups) {
+          if (group->sortIndex < dependGroup->sortIndex) { // swap groups
+            isSwap = true;
+            tmp = group->sortIndex;
+            group->sortIndex = dependGroup->sortIndex;
+            dependGroup->sortIndex = tmp;
+            sorted[tmp] = dependGroup;
+            sorted[group->sortIndex] = group;
+          }
         }
       }
     }
+    // copy sorted to groups
+    for (size_t g = 0; g < module->groups.size(); ++g)
+      module->groups[g] = sorted[g];
+    if (isSwap == false) break;
   }
 
-  // copy sorted to groups
-  for (size_t g = 0; g < module->groups.size(); ++g)
-    module->groups[g] = sorted[g];
+  std::cout << "AFTER[groups before sort---------------------]\n";
+  printGroups(module->groups, std::cout);
 
   return ERROR_OK;
 }
@@ -1200,25 +1218,31 @@ int Analyzer::sortStyleModuleGroups(StyleModule* module) {
     sorted.push_back(group);
   }
 
-  for (size_t g = 0; g < module->groups.size(); ++g) {
-    group = module->groups[g];
-    if (not group->dependGroups.empty()) {
-      // move dependGroup before this group
-      for (auto dependGroup: group->dependGroups) {
-        if (group->sortIndex < dependGroup->sortIndex) { // swap groups
-          tmp = group->sortIndex;
-          group->sortIndex = dependGroup->sortIndex;
-          dependGroup->sortIndex = tmp;
-          sorted[tmp] = dependGroup;
-          sorted[group->sortIndex] = group;
+  bool isSwap;
+  for (int i = 0; i < module->groups.size(); ++i) {
+    isSwap = false;
+    for (size_t g = 0; g < module->groups.size(); ++g) {
+      group = module->groups[g];
+      if (not group->dependGroups.empty()) {
+        // move dependGroup before this group
+        for (auto dependGroup: group->dependGroups) {
+          if (group->sortIndex < dependGroup->sortIndex) { // swap groups
+            isSwap = true;
+            tmp = group->sortIndex;
+            group->sortIndex = dependGroup->sortIndex;
+            dependGroup->sortIndex = tmp;
+            sorted[tmp] = dependGroup;
+            sorted[group->sortIndex] = group;
+          }
         }
       }
     }
+    // copy sorted to groups
+    for (size_t g = 0; g < module->groups.size(); ++g)
+      module->groups[g] = sorted[g];
+    if (isSwap == false) break;
   }
 
-  // copy sorted to groups
-  for (size_t g = 0; g < module->groups.size(); ++g)
-    module->groups[g] = sorted[g];
 
   return ERROR_OK;
 }
@@ -1345,10 +1369,25 @@ int Analyzer::processSuperClass(Class* clas) {
   // search class in module classes
   if (clas->superNames.size() == 1) {
     string name = clas->superNames[0];
-    for (auto superClass: module->classes) {
-      if (name == superClass->name) {
-        clas->superClass = superClass;
-        return ERROR_OK;
+    /* for (auto superClass: module->classes) { */
+    /*   if (name == superClass->name) { */
+    /*     clas->superClass = superClass; */
+    /*     return ERROR_OK; */
+    /*   } */
+    /* } */
+    for (auto gr: module->groups) {
+      for (auto superClass: gr->classes) {
+        if (name == superClass->name) {
+          clas->superClass = superClass;
+          if (gr != fileGroup) {
+            std::cout << "dependGroups added ";
+            addGroup(fileGroup->dependGroups, gr);
+            /* fileGroup->dependGroups.push_back(gr); */
+          }
+          std::cout << "class << " << clas->name <<
+            " extends " << name << '\n';
+          return ERROR_OK;
+        }
       }
     }
   } else {
@@ -1374,12 +1413,24 @@ int Analyzer::processSuperClass(Class* clas) {
   return ANALYZER_SUPERCLASS_NOT_FOUND_ERROR;
 }
 
+// debug
+vector<string> test_names = {"requestAnimationFrameInit_"};
 
 int Analyzer::processGroupDepends(vector<string>& names) {
+  if (names == test_names) {
+    std::cout << "TRY requestAnimationFrameInit_\n";
+  }
   for (auto gr: module->groups) {
     if (gr == fileGroup) continue; // skip current group
-    if (isNamesFromOtherGroup(names, gr))
-      fileGroup->dependGroups.push_back(gr);
+    if (isNamesFromOtherGroup(names, gr)) {
+      // debug
+      std::cout << "dependGroups added: ";
+      saveNames(names, std::cout);
+      std::cout << ", " << fileGroup->file->name << "[" << fileGroup->sortIndex << "]  -> " << gr->file->name << "[" << gr->sortIndex  << "]\n";
+
+      /* fileGroup->dependGroups.push_back(gr); */
+      addGroup(fileGroup->dependGroups, gr);
+    }
   }
 
   return ERROR_OK;

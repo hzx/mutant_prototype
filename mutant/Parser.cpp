@@ -437,7 +437,7 @@ int Parser::parseFunctionParams(vector<Variable*>& params, int left, int right) 
   int cursor = left;
   int paramType;
   while (cursor < right) {
-    paramRight = findSymbol(',', cursor, right);
+    paramRight = findCommaDelimiter(cursor, right);
 
     unique_ptr<Variable> param(new Variable());
     paramType = parseNames(param->typeNames, cursor, paramRight);
@@ -454,7 +454,7 @@ int Parser::parseFunctionParams(vector<Variable*>& params, int left, int right) 
 
 
 int Parser::parseFunctionCall(FunctionCall* fc, int left, int right) {
-  int semicolon = findSymbol(';', left, right);
+  int semicolon = findSemicolon(left, right);
 
   int result = parseNames(fc->names, left, semicolon);
   if (result < 0) return result; // contains error
@@ -1567,6 +1567,18 @@ int Parser::parseTagChilds(Tag* tag, int left, int right) {
       left = parseTag(child.get(), left, right);
       if (left < 0) return left; // contains error
       tag->childs.push_back(child.release());
+    } else if (tokens->at(left).word[0] == '{') {
+      int closeBracket = findSymbol('}', left, right);
+      if (closeBracket == right) return TAG_RAW_CHILD_CLOSE_BRACKET_ERROR;
+
+      unique_ptr<Tag> child(new Tag());
+      child->isRaw = true;
+      int error = parseNames(child->names, left + 1, closeBracket);
+      if (error < 0) return error;
+
+      tag->childs.push_back(child.release());
+
+      left = closeBracket + 1;
     } else { // parse value node
       left = parseNode(tag->value, left, right);
       if (left < 0) return left; // contains error
@@ -1712,7 +1724,7 @@ int Parser::parseNodesOnce(vector<Node*>& nodes, int left, int right) {
 
   if (token.word == "while") {
     unique_ptr<While> wh(new While());
-    int error = parseWhile(wh.get(), left, right);
+    int error = parseWhile(wh.get(), left + 1, right);
     if (error >= 0) nodes.push_back(wh.release());
     return error;
   }
@@ -2117,6 +2129,7 @@ int Parser::detectNodes(int left, int right) {
       case '{':
         if (tokens->at(i+1).word[0] == '}')
           return AIM_DIC_DECLARATION;
+        /* i = findPairCurlyBracket(i, right); */
         break;
       case '(':
         {

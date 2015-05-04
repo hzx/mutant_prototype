@@ -27,6 +27,9 @@ bool inModules(BaseModule* module, vector<BaseModule*> modules);
 /* bool isNamesEqual(vector<string>& namesLeft, vector<string>& namesRight); */
 int getMinOpPriority(vector<Node*>& nodes, int left, int right);
 void saveNames(vector<string>& names, ostream& store);
+void printGroups(vector<FileGroup*>& groups, ostream& store);
+void addGroup(vector<FileGroup*>& groups, FileGroup* group);
+void addStyleGroup(vector<StyleFileGroup*>& groups, StyleFileGroup* group);
 
 
 #endif /* end of include guard: MUTANT_HELPER_H */

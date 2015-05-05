@@ -90,6 +90,7 @@ public:
   void formatNames(vector<string>& names);
   int formatOperatorNode(Node* node, Node* parent);
   int format(vector<Module*>& modules, Module* module);
+  bool isMainExists(vector<Function*> functions);
 
   void incIndent();
   void decIndent();

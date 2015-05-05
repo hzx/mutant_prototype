@@ -17,7 +17,7 @@ using std::endl;
 char MUTANT_SYSTEM_JS[] = R"(
 window.mutant = window.mutant || {};
 
-mutant.register__ = function(names, module) {
+mutant.register__ = function(names, module, main) {
   var ns = mutant;
   for (var i = 0; i < names.length - 1; ++i) {
     if (!(names[i] in ns)) ns[names[i]] = {};
@@ -26,7 +26,7 @@ mutant.register__ = function(names, module) {
   var last = names[names.length - 1];
   if (last in ns) mutant.augment__(ns[last], module);
   else ns[last] = module;
-  if ("main" in module) module.main();
+  if (main) main();
 };
 
 mutant.extends__ = function(child, base) {

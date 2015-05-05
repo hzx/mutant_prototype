@@ -88,7 +88,10 @@ int JsFormatter::formatModule(Module* module, ostream& store_) {
     else store_ << ", ";
     store_ << '"' <<  name << '"';
   }
-  store_ << "], module__);\n})();\n";
+  if (isMainExists(module->functions)) 
+    store_ << "], module__, main);\n})();\n";
+  else 
+    store_ << "], module__, null);\n})();\n";
 
   return ERROR_OK;
 }
@@ -134,7 +137,7 @@ int JsFormatter::formatStyleModule(StyleModule* module, ostream& store) {
     else store << ", ";
     store << '"' << name << '"';
   }
-  store << "], module__);\n";
+  store << "], module__, null);\n";
 
   store << "})();\n";
 
@@ -1779,6 +1782,13 @@ int JsFormatter::formatOperatorNode(Node* node, Node* parent) {
 
 int JsFormatter::format(vector<Module*>& modules, Module* module) {
   return ERROR_OK;
+}
+
+bool JsFormatter::isMainExists(vector<Function*> functions) {
+  for (auto func: functions)
+    if (func->name == "main") return true;
+
+  return false;
 }
 
 

@@ -1,10 +1,13 @@
 #include <memory>
 #include <cstdlib>
+#include <sstream>
+#include <iostream>
 #include "Parser.h"
 #include "helpers.h"
 
 
 using std::unique_ptr;
+using std::ostringstream;
 
 
 // TODO: introduce const keyword
@@ -96,6 +99,13 @@ int Parser::parse(Module* module_) {
     while (cursor < right) {
       prev = cursor;
       cursor = parseGlobal(cursor, right);
+
+      // debug
+      /* if (cursor < 0) { */
+      /*   std::cout << "parseGlobal.error: " << cursor << ", prev: " << prev */
+      /*     << ", right: " << right << '\n'; */
+      /* } */
+
       if (cursor < 0) return cursor;
       if (prev == cursor) return PARSER_PERPETUAL_LOOP;
     }
@@ -161,7 +171,7 @@ int Parser::parseGlobal(int left, int right) {
     return error;
   }
 
-  int aim = detectGlobal(left, right);
+  int aim = detectAimGlobal(left, right);
 
   switch (aim) {
     case AIM_VARIABLE:
@@ -208,7 +218,7 @@ int Parser::parseClassNodes(Class* clas, int left, int right) {
     return result;
   }
 
-  int aim = detectGlobal(left, right);
+  int aim = detectAimGlobal(left, right);
 
   switch (aim) {
     case AIM_VARIABLE:
@@ -378,7 +388,7 @@ int Parser::parseFunction(Function* function, int left, int right) {
   if (cursor < 0) return cursor; // contains error
 
   if (closeCurlyBracket - openCurlyBracket > 1) {
-    cursor = parseNodes(function->nodes, openCurlyBracket + 1, closeCurlyBracket);
+    cursor = parseBlockNodes(function->nodes, openCurlyBracket + 1, closeCurlyBracket);
     if (cursor < 0) return cursor; // contains error
   }
   
@@ -422,7 +432,7 @@ int Parser::parseLambda(Lambda* lambda, int left, int right) {
   }
 
   if (closeCurlyBracket - openCurlyBracket > 1) {
-    error = parseNodes(lambda->nodes, openCurlyBracket + 1, closeCurlyBracket);
+    error = parseBlockNodes(lambda->nodes, openCurlyBracket + 1, closeCurlyBracket);
     if (error < 0) return error;
   }
 
@@ -469,7 +479,7 @@ int Parser::parseFunctionCall(FunctionCall* fc, int left, int right) {
   if (result < 0) return result;
 
   if (tokens->at(closeRoundBracket + 1).word[0] == '.') {
-    int cursor = parseNode(fc->tail, closeRoundBracket + 2, right);
+    int cursor = parseRightNode(fc->tail, closeRoundBracket + 2, right);
     return cursor;
   }
 
@@ -485,7 +495,7 @@ int Parser::parseFunctionCallParams(vector<Node*>& params, int left, int right) 
   while (cursor < right) {
     comma = findCommaDelimiter(cursor, right);
     node = nullptr; // TODO: not need?!
-    error = parseNode(node, cursor, comma);
+    error = parseRightNode(node, cursor, comma);
     if (error < 0) return error; // contains error
     /* if (node == nullptr) return -12300; */
     /* if (node == nullptr) return -comma; */
@@ -514,7 +524,7 @@ int Parser::parseVariable(Variable* variable, int left, int right) {
   variable->name = tokens->at(cursor).word;
 
   if (semicolon - equal > 1) { // parse body between equal and right
-    int nodeResult = parseNode(variable->node, equal + 1, semicolon);
+    int nodeResult = parseRightNode(variable->node, equal + 1, semicolon);
     if (nodeResult < 0) return nodeResult; // contains error
   }
 
@@ -582,6 +592,9 @@ int Parser::parseClass(Class* clas, int left, int right) {
     if (cursor < 0) return cursor; // contains error
     if (prev == cursor) return PARSER_PERPETUAL_LOOP;
   }
+
+  // debug
+  /* std::cout << "parseClass: " << clas->name << '\n'; */
 
   return closeBracket + 1;
 }
@@ -1204,19 +1217,19 @@ int Parser::parseIndex(Index* index, int left, int right) {
   int cursor = parseNames(index->names, left, openBracket);
   if (cursor < 0) return cursor; // contains error
 
-  cursor = parseNode(index->key, openBracket + 1, closeBracket);
+  cursor = parseRightNode(index->key, openBracket + 1, closeBracket);
   if (cursor < 0) return cursor;
 
   if (assign != semicolon) { // found assignment maybe, check
     string& next = getNextTokenWord(semicolon, assign + 1);
     if (next[0] != '=') { // not equality, assignment
-      cursor = parseNode(index->node, assign + 1, semicolon);
+      cursor = parseRightNode(index->node, assign + 1, semicolon);
       if (cursor < 0) return cursor;
     }
   }
 
   if (tokens->at(closeBracket + 1).word[0] == '.') {
-    cursor = parseNode(index->tail, closeBracket + 2, right);
+    cursor = parseRightNode(index->tail, closeBracket + 2, right);
     return cursor;
   }
 
@@ -1227,7 +1240,7 @@ int Parser::parseIndex(Index* index, int left, int right) {
 int Parser::parseAddPrefix(AddPrefix* ap, int left, int right) {
   int semicolon = findSymbol(';', left, right);
 
-  int error = parseNode(ap->node, left, right);
+  int error = parseRightNode(ap->node, left, right);
   if (error < 0) return error;
 
   return semicolon + 1;
@@ -1237,7 +1250,7 @@ int Parser::parseAddPrefix(AddPrefix* ap, int left, int right) {
 int Parser::parseSubPrefix(SubPrefix* sp, int left, int right) {
   int semicolon = findSymbol(';', left, right);
 
-  int error = parseNode(sp->node, left, right);
+  int error = parseRightNode(sp->node, left, right);
   if (error < 0) return error;
 
   return semicolon + 1;
@@ -1251,10 +1264,10 @@ int Parser::parseIf(If* ifn, int left, int right) {
   int closeCurlyBracket = findPairCurlyBracket(openCurlyBracket, right);
   if (closeCurlyBracket == right) return IF_CLOSE_CURLY_BRACKET_ERROR;
 
-  int error = parseNode(ifn->condition, left, openCurlyBracket);
+  int error = parseRightNode(ifn->condition, left, openCurlyBracket);
   if (error < 0) return error;
 
-  error = parseNodes(ifn->nodes, openCurlyBracket + 1, closeCurlyBracket);
+  error = parseBlockNodes(ifn->nodes, openCurlyBracket + 1, closeCurlyBracket);
   if (error < 0) return error;
 
   string& next = getNextTokenWord(right, closeCurlyBracket + 1);
@@ -1268,7 +1281,7 @@ int Parser::parseIf(If* ifn, int left, int right) {
 
     ifn->else_ = new Else();
 
-    error = parseNodes(ifn->else_->nodes, openCurlyBracket + 1, closeCurlyBracket);
+    error = parseBlockNodes(ifn->else_->nodes, openCurlyBracket + 1, closeCurlyBracket);
     if (error < 0) return error;
   }
 
@@ -1283,7 +1296,7 @@ int Parser::parseSwitch(Switch* sw, int left, int right) {
   if (closeCurlyBracket == right) return SWITCH_CLOSE_CURLY_BRACKET_ERROR;
 
   if (openCurlyBracket - left <= 0) return SWITCH_NO_VALUE_ERROR;
-  int error = parseNode(sw->value, left, openCurlyBracket);
+  int error = parseRightNode(sw->value, left, openCurlyBracket);
   if (error < 0) return error;
 
   int cursor = openCurlyBracket + 1;
@@ -1300,16 +1313,16 @@ int Parser::parseSwitch(Switch* sw, int left, int right) {
 
     if (word == CASE_WORD) {
       unique_ptr<Case> casen(new Case());
-      error = parseNode(casen->value, cursor + 1, colon);
+      error = parseRightNode(casen->value, cursor + 1, colon);
       if (error < 0) return error;
 
-      error = parseNodes(casen->nodes, colon + 1, caseEnd);
+      error = parseBlockNodes(casen->nodes, colon + 1, caseEnd);
       if (error < 0) return error;
 
       sw->cases.push_back(casen.release());
     } else if (word == DEFAULT_WORD) {
       sw->def = new Case();
-      error = parseNodes(sw->def->nodes, colon + 1, closeCurlyBracket);
+      error = parseBlockNodes(sw->def->nodes, colon + 1, closeCurlyBracket);
       if (error < 0) return error;
     }
 
@@ -1335,13 +1348,13 @@ int Parser::parseFor(For* forn, int left, int right) {
   int error = parseForInit(forn, left, firstSemicolon + 1);
   if (error < 0) return error;
 
-  error = parseNode(forn->condition, firstSemicolon + 1, secondSemicolon + 1);
+  error = parseRightNode(forn->condition, firstSemicolon + 1, secondSemicolon + 1);
   if (error < 0) return error;
 
   error = parseForInc(forn, secondSemicolon + 1, openCurlyBracket);
   if (error < 0) return error;
 
-  error = parseNodes(forn->nodes, openCurlyBracket + 1, closeCurlyBracket);
+  error = parseBlockNodes(forn->nodes, openCurlyBracket + 1, closeCurlyBracket);
   if (error < 0) return error;
 
   return closeCurlyBracket + 1;
@@ -1354,7 +1367,7 @@ int Parser::parseForInit(For* forn, int left, int right) {
 
   while (cursor < right) {
     comma = findSymbol(',', cursor, right);
-    error = parseNodes(forn->initNodes, cursor, comma);
+    error = parseBlockNodes(forn->initNodes, cursor, comma);
     if (error < 0) return error;
     cursor = comma + 1;
   }
@@ -1370,7 +1383,7 @@ int Parser::parseForInc(For* forn, int left, int right) {
   while (cursor < right) {
     comma = findSymbol(',', cursor, right);
     Node* node;
-    error = parseNode(node, cursor, comma);
+    error = parseRightNode(node, cursor, comma);
     if (error < 0) return error;
     forn->incNodes.push_back(node);
     cursor = comma + 1;
@@ -1398,7 +1411,7 @@ int Parser::parseForEach(ForEach* foreach, int left, int right) {
   if (error < 0) return error;
   foreach->values = id.release();
 
-  error = parseNodes(foreach->nodes, openCurlyBracket + 1, closeCurlyBracket);
+  error = parseBlockNodes(foreach->nodes, openCurlyBracket + 1, closeCurlyBracket);
   if (error < 0) return error;
 
   return closeCurlyBracket + 1;
@@ -1427,7 +1440,7 @@ int Parser::parseForIn(ForIn* forin, int left, int right) {
   forin->value = var.release();
   forin->values = id.release();
 
-  cursor = parseNodes(forin->nodes, openBracket + 1, closeBracket);
+  cursor = parseBlockNodes(forin->nodes, openBracket + 1, closeBracket);
   if (cursor < 0) return cursor;
 
   return closeBracket + 1;
@@ -1440,10 +1453,10 @@ int Parser::parseWhile(While* wh, int left, int right) {
   int closeCurlyBracket = findPairCurlyBracket(openCurlyBracket, right);
   if (closeCurlyBracket == right) return WHILE_CLOSE_CURLY_BRACKET_ERROR;
 
-  int error = parseNode(wh->condition, left, openCurlyBracket);
+  int error = parseRightNode(wh->condition, left, openCurlyBracket);
   if (error < 0) return error;
 
-  error = parseNodes(wh->nodes, openCurlyBracket + 1, closeCurlyBracket);
+  error = parseBlockNodes(wh->nodes, openCurlyBracket + 1, closeCurlyBracket);
   if (error < 0) return error;
 
   return closeCurlyBracket + 1;
@@ -1467,7 +1480,7 @@ int Parser::parseTagAttributes(Tag* tag, int left, int right) {
       unique_ptr<TagEvent> event(new TagEvent());
       event->name = name.substr(2);
 
-      error = parseNode(event->value, equal + 1, end);
+      error = parseRightNode(event->value, equal + 1, end);
       if (error < 0) return error;
 
       tag->events.push_back(event.release());
@@ -1475,7 +1488,7 @@ int Parser::parseTagAttributes(Tag* tag, int left, int right) {
       unique_ptr<TagProp> prop(new TagProp());
       prop->name = name;
 
-      error = parseNode(prop->value, equal + 1, end);
+      error = parseRightNode(prop->value, equal + 1, end);
       if (error < 0) return error;
 
       tag->props.push_back(prop.release());
@@ -1527,7 +1540,7 @@ int Parser::parseTry(Try* try_, int left, int right) {
   if (closeBracket == right) return TRY_CLOSE_BRACKET_ERROR;
 
   // parse nodes
-  int error = parseNodes(try_->nodes, left + 1, closeBracket);
+  int error = parseBlockNodes(try_->nodes, left + 1, closeBracket);
   if (error < 0) return error;
 
   // parse catches
@@ -1547,7 +1560,7 @@ int Parser::parseTry(Try* try_, int left, int right) {
     if (error < 0) return error;
 
     if (closeBracket - openBracket > 1) {
-      error = parseNodes(catch_->nodes, openBracket + 1, closeBracket);
+      error = parseBlockNodes(catch_->nodes, openBracket + 1, closeBracket);
       if (error < 0) return error;
     }
 
@@ -1567,7 +1580,7 @@ int Parser::parseTagChilds(Tag* tag, int left, int right) {
       left = parseTag(child.get(), left, right);
       if (left < 0) return left; // contains error
       tag->childs.push_back(child.release());
-    } else if (tokens->at(left).word[0] == '{') {
+    } else if (tokens->at(left).word[0] == '{') { // raw tag
       int closeBracket = findSymbol('}', left, right);
       if (closeBracket == right) return TAG_RAW_CHILD_CLOSE_BRACKET_ERROR;
 
@@ -1580,7 +1593,7 @@ int Parser::parseTagChilds(Tag* tag, int left, int right) {
 
       left = closeBracket + 1;
     } else { // parse value node
-      left = parseNode(tag->value, left, right);
+      left = parseRightNode(tag->value, left, right);
       if (left < 0) return left; // contains error
     }
   }
@@ -1602,7 +1615,7 @@ int Parser::parseArrayDeclaration(ArrayLiteral* array, int left, int right) {
     comma = findCommaDelimiter(cursor, closeBracket);
     if (comma - cursor <= 0) break; // no tokens between
 
-    error = parseNode(node, cursor, comma);
+    error = parseRightNode(node, cursor, comma);
     if (error < 0) return error;
     array->nodes.push_back(node);
 
@@ -1633,7 +1646,7 @@ int Parser::parseDicDeclaration(DicLiteral* dic, int left, int right) {
 
     if (colon - cursor <= 0) return DIC_NO_KEY_ERROR;
     key = nullptr;
-    error = parseNode(key, cursor, colon);
+    error = parseRightNode(key, cursor, colon);
     if (error < 0) {
       if (key != nullptr) delete key;
       return error;
@@ -1642,7 +1655,7 @@ int Parser::parseDicDeclaration(DicLiteral* dic, int left, int right) {
     // must be comma - (colon - 1) <= 0
     if (comma - colon <= 1) return DIC_NO_VALUE_ERROR;
     value = nullptr;
-    error = parseNode(value, colon + 1, comma);
+    error = parseRightNode(value, colon + 1, comma);
     if (error < 0) {
       if (value != nullptr) delete value;
       return error;
@@ -1668,7 +1681,7 @@ int Parser::parseIdentifier(Identifier* identifier, int left, int right) {
   if (cursor < 0) return cursor;
 
   if (semicolon - equal > 1) {
-    cursor = parseNode(identifier->node, equal + 1, semicolon);
+    cursor = parseRightNode(identifier->node, equal + 1, semicolon);
     if (cursor < 0) return cursor;
   }
 
@@ -1677,14 +1690,14 @@ int Parser::parseIdentifier(Identifier* identifier, int left, int right) {
 
 
 // TODO: optimize word detection by switch and first symbol
-int Parser::parseNodesOnce(vector<Node*>& nodes, int left, int right) {
-  if (right - left <= 0) return right;
+int Parser::parseBlockNode(vector<Node*>& nodes, int left, int right) {
+  if (right - left <= 1) return right;
 
   Token& token = tokens->at(left);
 
   if (token.word == "delete") {
     unique_ptr<Delete> del(new Delete());
-    int error = parseNode(del->node, left + 1, right);
+    int error = parseRightNode(del->node, left + 1, right);
     if (error >= 0) nodes.push_back(del.release());
     return error;
   }
@@ -1734,7 +1747,7 @@ int Parser::parseNodesOnce(vector<Node*>& nodes, int left, int right) {
     int semicolon = findSemicolon(left + 1, right);
     if (semicolon == right) return RETURN_NO_SEMICOLON_ERROR;
     if (semicolon - left > 1) {
-      int error = parseNode(ret->node, left + 1, semicolon);
+      int error = parseRightNode(ret->node, left + 1, semicolon);
       if (error < 0) return error;
     }
     nodes.push_back(ret.release());
@@ -1764,7 +1777,7 @@ int Parser::parseNodesOnce(vector<Node*>& nodes, int left, int right) {
     return error;
   }
 
-  int aim = detectNodes(left, right);
+  int aim = detectAimBlock(left, right);
   if (aim < 0) return aim;
 
   switch (aim) {
@@ -1826,14 +1839,20 @@ int Parser::parseNodesOnce(vector<Node*>& nodes, int left, int right) {
       }
   }
 
+  ostringstream buf;
+  buf << "tokens(" << left << ", " << right << "): \n";
+  storeTokens(*tokens, left, right, buf);
+  errorMessage = buf.str();
+  std::cout << errorMessage << '\n';
+
   return PARSER_AIM_NODES_UNKNOWN_ERROR;
 }
 
 
-int Parser::parseNodes(vector<Node*>& nodes, int left, int right) {
+int Parser::parseBlockNodes(vector<Node*>& nodes, int left, int right) {
   int cursor = left;
   while (cursor < right) {
-    cursor = parseNodesOnce(nodes, cursor, right);
+    cursor = parseBlockNode(nodes, cursor, right);
     if (cursor < 0) return cursor; // contains error
   }
 
@@ -1841,7 +1860,7 @@ int Parser::parseNodes(vector<Node*>& nodes, int left, int right) {
 }
 
 
-int Parser::parseNode(Node*& node, int left, int right) {
+int Parser::parseRightNode(Node*& node, int left, int right) {
   if (left >= right) return right;
 
   Token& token = tokens->at(left);
@@ -1892,7 +1911,7 @@ int Parser::parseNode(Node*& node, int left, int right) {
     return left + 2;
   }
 
-  int aim = detectNode(left, right);
+  int aim = detectAimRight(left, right);
 
   switch (aim) {
     case AIM_ARRAY_DECLARATION:
@@ -2095,7 +2114,7 @@ bool Parser::isForIn(int left, int right) {
 /* } */
 
 
-int Parser::detectGlobal(int left, int right) {
+int Parser::detectAimGlobal(int left, int right) {
   bool isAssignment = false;
   for (int i = left; i < right; ++i) {
     switch (tokens->at(i).word[0]) {
@@ -2118,7 +2137,7 @@ int Parser::detectGlobal(int left, int right) {
 }
 
 
-int Parser::detectNodes(int left, int right) {
+int Parser::detectAimBlock(int left, int right) {
   for (int i = left; i < right; ++i) {
     switch (tokens->at(i).word[0]) {
       case '=':
@@ -2167,7 +2186,7 @@ int Parser::detectNodes(int left, int right) {
 }
 
 
-int Parser::detectNode(int left, int right) {
+int Parser::detectAimRight(int left, int right) {
   string& word = tokens->at(left).word;
 
   switch (word[0]) {

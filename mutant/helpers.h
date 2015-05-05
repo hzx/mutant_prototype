@@ -14,6 +14,7 @@ using std::ostream;
 
 
 void tokensToWords(vector<Token>& tokens, vector<string>& words);
+void storeTokens(vector<Token>& tokens, int left, int right, ostream& store);
 bool isIdentifierFirst(char symbol);
 bool isIdentifierSymbol(char symbol);
 bool isDigit(char symbol);

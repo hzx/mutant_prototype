@@ -339,8 +339,8 @@ mutant.extends__(Foo, ui.Dialog);
 
 TEST_F(JsFormatterTest, formatStyleClass) {
   string expected = R"(var app = module__.app = {
-  padding: "8px 4px";
-  background: "url(\"img/image.png\") left top transparent no-repeat";
+  padding: "8px 4px",
+  background: "url(\"img/image.png\") left top transparent no-repeat"
 };
 mutant.augment__(app, baseApp);
 

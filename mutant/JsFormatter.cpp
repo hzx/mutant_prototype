@@ -69,13 +69,14 @@ int JsFormatter::formatModule(Module* module, ostream& store_) {
   if (not module->usings.empty()) store_ << '\n';
 
   // debug
-  std::cout << "[";
-  saveNames(module->names, std::cout);
-  std::cout << "]-----------------------------\n";
+  /* std::cout << "["; */
+  /* saveNames(module->names, std::cout); */
+  /* std::cout << "]-----------------------------\n"; */
 
   for (auto group: module->groups) {
     // debug
-    std::cout << "formatFileGroup: " << group->file->name << '\n';
+    /* std::cout << "formatFileGroup: " << group->file->name << '\n'; */
+
     error = formatFileGroup(group);
     if (error < 0) return error;
   }
@@ -484,15 +485,16 @@ int JsFormatter::formatStyleClass(StyleClass* clas) {
   int error;
   bool isFirst = true;
   for (auto prop: clas->properties) {
-    storeIndent();
     if (isFirst) isFirst = false;
     else *store << ",\n";
+    storeIndent();
     error = formatStyleProperty(prop);
     if (error < 0) return error;
   }
 
   decIndent();
 
+  if (!clas->properties.empty()) *store << '\n';
   *store << "};\n";
   if (!clas->superNames.empty()) {
     *store << "mutant.augment__(" << clas->name << ", ";

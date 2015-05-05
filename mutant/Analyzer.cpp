@@ -792,6 +792,7 @@ int Analyzer::processTag(Tag* tag) {
 
   if (tag->isRaw) {
     if (clas != nullptr) {
+      /* if (tag->names.empty()) return -123123; */
       tag->isClassMember = isClassMemberName(clas, tag->names[0]);
     }
     return ERROR_OK;
@@ -1173,8 +1174,8 @@ int Analyzer::sortModuleGroups(Module* module) {
   }
 
   // debug
-  std::cout << "BEFORE[groups before sort---------------------]\n";
-  printGroups(module->groups, std::cout);
+  /* std::cout << "BEFORE[groups before sort---------------------]\n"; */
+  /* printGroups(module->groups, std::cout); */
 
   bool isSwap;
   for (int i = 0; i < module->groups.size(); ++i) {
@@ -1200,8 +1201,9 @@ int Analyzer::sortModuleGroups(Module* module) {
     if (isSwap == false) break;
   }
 
-  std::cout << "AFTER[groups before sort---------------------]\n";
-  printGroups(module->groups, std::cout);
+  // debug
+  /* std::cout << "AFTER[groups before sort---------------------]\n"; */
+  /* printGroups(module->groups, std::cout); */
 
   return ERROR_OK;
 }
@@ -1338,6 +1340,7 @@ bool Analyzer::isMemberNames(vector<string>& names) {
 // - class name,
 // - class enum,
 // - class static function
+// - class static variables
 bool Analyzer::isNamesFromOtherGroup(vector<string>& names, FileGroup* group) {
   string name = names[0];
   if (name == "this" or name == "base" or isLocalName(name)) return false;
@@ -1364,28 +1367,22 @@ bool Analyzer::isNamesFromOtherGroup(vector<string>& names, FileGroup* group) {
 }
 
 
-// TODO: implement
 int Analyzer::processSuperClass(Class* clas) {
   // search class in module classes
   if (clas->superNames.size() == 1) {
     string name = clas->superNames[0];
-    /* for (auto superClass: module->classes) { */
-    /*   if (name == superClass->name) { */
-    /*     clas->superClass = superClass; */
-    /*     return ERROR_OK; */
-    /*   } */
-    /* } */
     for (auto gr: module->groups) {
-      for (auto superClass: gr->classes) {
+      for (auto superClass: gr->classes) { // find superClass
         if (name == superClass->name) {
           clas->superClass = superClass;
           if (gr != fileGroup) {
-            std::cout << "dependGroups added ";
+            // debug
+            /* std::cout << "dependGroups added "; */
             addGroup(fileGroup->dependGroups, gr);
             /* fileGroup->dependGroups.push_back(gr); */
           }
-          std::cout << "class << " << clas->name <<
-            " extends " << name << '\n';
+          // debug
+          /* std::cout << "class << " << clas->name << " extends " << name << '\n'; */
           return ERROR_OK;
         }
       }
@@ -1413,20 +1410,15 @@ int Analyzer::processSuperClass(Class* clas) {
   return ANALYZER_SUPERCLASS_NOT_FOUND_ERROR;
 }
 
-// debug
-vector<string> test_names = {"requestAnimationFrameInit_"};
 
 int Analyzer::processGroupDepends(vector<string>& names) {
-  if (names == test_names) {
-    std::cout << "TRY requestAnimationFrameInit_\n";
-  }
   for (auto gr: module->groups) {
     if (gr == fileGroup) continue; // skip current group
     if (isNamesFromOtherGroup(names, gr)) {
       // debug
-      std::cout << "dependGroups added: ";
-      saveNames(names, std::cout);
-      std::cout << ", " << fileGroup->file->name << "[" << fileGroup->sortIndex << "]  -> " << gr->file->name << "[" << gr->sortIndex  << "]\n";
+      /* std::cout << "dependGroups added: "; */
+      /* saveNames(names, std::cout); */
+      /* std::cout << ", " << fileGroup->file->name << "[" << fileGroup->sortIndex << "]  -> " << gr->file->name << "[" << gr->sortIndex  << "]\n"; */
 
       /* fileGroup->dependGroups.push_back(gr); */
       addGroup(fileGroup->dependGroups, gr);

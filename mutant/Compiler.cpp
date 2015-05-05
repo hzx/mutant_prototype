@@ -23,7 +23,9 @@ mutant.register__ = function(names, module) {
     if (!(names[i] in ns)) ns[names[i]] = {};
     ns = ns[names[i]];
   }
-  ns[names[names.length - 1]] = module;
+  var last = names[names.length - 1];
+  if (last in ns) mutant.augment__(ns[last], module);
+  else ns[last] = module;
   if ("main" in module) module.main();
 };
 
@@ -114,98 +116,7 @@ int Compiler::compileTask(Task* task) {
 // analyze
 // format
 // add in modules or styles
-/* int Compiler::compileModule(vector<names>& names) { */
-/*   // search names in modules */
-/*   for (auto mod: env->modules) { */
-/*   } */
-/*   // search names in styles */
-/*   for (auto mod: env->styles) { */
-/*   } */
-/* int Compiler::compileCommonModule2(vector<string>& names) { */
-/*   // search module in compiled */
-/*   auto codeModule = getEnvModule(names); */
-/*   if (codeModule != nullptr) return ERROR_OK; */
-/*   auto styleModule = getEnvStyleModule(names); */
-/*   if (styleModule != nullptr) return ERROR_OK; */
 
-/*   string dir = loader.searchModuleDir(names, project->paths); */
-/*   if (dir.empty()) return LOADER_MODULE_NOT_FOUND_ERROR; */
-
-/*   int type = loader.detectModuleType(dir); */
-/*   if (type < 0) return type; */
-/*   switch (type) { */
-/*     case MODULE_MUT: */
-/*       { */
-/*         unique_ptr<Module> module(new Module()); */
-/*         module->names = names; */
-/*         module->dir = dir; */
-
-/*         int error; */
-/*         loader.loadModule(module.get()); */
-
-/*         for (auto file: module->files) { */
-/*           error = lexer.tokenize(file->content, file->tokens); */
-/*           if (error < 0) return error; */
-/*         } */
-
-/*         error = parser.parse(module.get()); */
-/*         if (error < 0) return error; */
-/*         // compileCommonModule2 for imports */
-/*         for (auto import: module->imports) { */
-/*           error = compileCommonModule2(import->names); */
-/*           if (error < 0) return error; */
-/*         } */
-        
-/*         error = analyzer.process(env, module.get()); */
-/*         if (error < 0) return error; */
-/*         ostringstream moduleBuf; */
-/*         error = jsFormatter.formatModule(module.get(), moduleBuf); */
-/*         if (error < 0) return error; */
-/*         module->output = moduleBuf.str(); */
-
-/*         // add module to modules */
-/*         env->modules.push_back(module.release()); */
-/*       } */
-/*     case MODULE_MUS: */
-/*       { */
-/*         unique_ptr<StyleModule> module(new StyleModule()); */
-/*         module->names = names; */
-/*         module->dir = dir; */
-        
-/*         int error; */
-/*         loader.loadStyleModule(module.get()); */
-
-/*         for (auto file: module->files) { */
-/*           error = lexer.tokenize(file->content, file->tokens); */
-/*           if (error < 0) return error; */
-/*         } */
-
-/*         error = styleParser.parse(module.get()); */
-/*         if (error < 0) return error; */
-/*         // compileCommonModule2 for imports */
-/*         for (auto import: module->imports) { */
-/*           error = compileCommonModule2(import->names); */
-/*           if (error < 0) return error; */
-/*         } */
-
-/*         error = analyzer.process(env, module.get()); */
-/*         if (error < 0) return error; */
-/*         ostringstream moduleBuf; */
-/*         error = jsFormatter.formatStyleModule(module.get(), moduleBuf); */
-/*         if (error < 0) return error; */
-/*         module->output = moduleBuf.str(); */
-
-/*         // add module to modules */
-/*         env->styles.push_back(module.release()); */
-/*       } */
-/*   } */
-
-/*   return ERROR_OK; */
-/* } */
-
-
-/*   return ERROR_OK; */
-/* } */
 
 // merge main module
 // store system code
@@ -246,12 +157,6 @@ int Compiler::compileCommonModule(vector<string>& names, BaseModule*& moduleResu
   if (dir.empty()) {
     cout << "module not found: ";
     saveNames(names, cout);
-    /* bool isFirst = true; */
-    /* for (auto name: names) { */
-    /*   if (isFirst) isFirst = false; */
-    /*   else cout << '.'; */
-    /*   cout << name; */
-    /* } */
     cout << "\n";
     return LOADER_MODULE_NOT_FOUND_ERROR;
   }
@@ -544,71 +449,3 @@ int Compiler::addCommonModule(BaseModule* module) {
   }
   return ERROR_OK;
 }
-
-
-
-/* int Compiler::compile(vector<Module*>& modules) { */
-/*   if (options.check() != 0) { */
-/*     std::cout << "options error" << std::endl; */
-/*     return options.error; */
-/*   } */
-
-/*   unique_ptr<Module> pmain(new Module()); */
-/*   auto main = pmain.get(); */
-
-/*   main->name = options.mainModule; */
-  
-/*   if (!compileModule(main)) { */
-/*     std::cout << "compile main module error" << std::endl; */
-/*     return -1; */
-/*   } */
-
-/*   modules.push_back(pmain.release()); */
-
-/*   if (!analyzer.process(modules, main)) { */
-/*     std::cout << "analyze main module error" << std::endl; */
-/*     return -1; */
-/*   } */
-
-/*   if (!jsFormatter.format(modules, main)) { */
-/*     std::cout << "save main module error" << std::endl; */
-/*     return -1; */
-/*   } */
-
-/*   return 0; */
-/* } */
-
-
-/* int Compiler::compileModule(Module* module) { */
-/*   string dir = loader.searchModuleDir(module->name, options.paths); */
-/*   if (dir.empty()) { */
-/*     std::cout << "module " << module->name << " directory not found" << std::endl; */
-/*     return -1; */
-/*   } */
-
-/*   module->dir = dir; */
-
-/*   loader.loadFiles(module, EXT_MUT, EXT_LENGTH); */
-/*   if (module->files.empty()) { */
-/*     std::cout << "module " << module->name << " empty, dir: " << */
-/*       module->dir << std::endl; */
-/*     return -1; */
-/*   } */
-
-/*   for (auto file: module->files) { */
-/*     if (lexer.tokenize(file->content, file->tokens) != 0) { */
-/*       std::cout << "tokenize error module " << module->name << ", file " << */
-/*         file->absName << std::endl; */
-/*       return -1; */
-/*     } */
-/*   } */
-
-/*   if (parser.parse(module) != 0) { */
-/*     std::cout << "parse error module " << module->name << std::endl; */
-/*     return -1; */
-/*   } */
-
-/*   // TODO: compile import modules */
-
-/*   return 0; */
-/* } */

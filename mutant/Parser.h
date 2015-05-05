@@ -54,18 +54,18 @@ public:
   int parseAddPrefix(AddPrefix* ap, int left, int right);
   int parseSubPrefix(SubPrefix* sp, int left, int right);
 
-  int parseNodesOnce(vector<Node*>& nodes, int left, int right);
-  int parseNodes(vector<Node*>& nodes, int left, int right);
-  int parseNode(Node*& node, int left, int right);
+  int parseBlockNode(vector<Node*>& nodes, int left, int right);
+  int parseBlockNodes(vector<Node*>& nodes, int left, int right);
+  int parseRightNode(Node*& node, int left, int right);
 
   bool isExpression(int left, int right);
   bool isVariable(int left, int right);
   bool isForEach(int left, int right);
   bool isForIn(int left, int right);
   /* bool isWordLogicalOperator(string& word); */
-  int detectGlobal(int left, int right);
-  int detectNodes(int left, int right);
-  int detectNode(int left, int right);
+  int detectAimGlobal(int left, int right);
+  int detectAimBlock(int left, int right);
+  int detectAimRight(int left, int right);
   int findSymbol(char symbol, int left, int right);
   int findSemicolon(int left, int right);
   int findWord(string const& word, int left, int right);

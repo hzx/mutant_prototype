@@ -91,6 +91,7 @@ public:
   int formatOperatorNode(Node* node, Node* parent);
   int format(vector<Module*>& modules, Module* module);
   bool isMainExists(vector<Function*> functions);
+  int imgToBase64(string& filename);
 
   void incIndent();
   void decIndent();
@@ -99,6 +100,7 @@ public:
   ostream* store;
   int indent = 0;
   Class* clas = nullptr;
+  StyleModule* styleModule = nullptr;
   string errorMsg;
 };
 

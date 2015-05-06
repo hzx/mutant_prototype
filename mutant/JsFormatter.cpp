@@ -1,10 +1,13 @@
 #include <iostream>
 #include <sstream>
+#include <fstream>
 #include "JsFormatter.h"
 #include "helpers.h"
+#include "utils.h"
 
 
 using std::ostringstream;
+using std::ifstream;
 
 
 char INDENT_SPACES[] = "  ";
@@ -110,6 +113,7 @@ int JsFormatter::formatStyleFileGroup(StyleFileGroup* group) {
 
 
 int JsFormatter::formatStyleModule(StyleModule* module, ostream& store) {
+  styleModule = module;
   this->store = &store;
 
   store << "(function() {\n"
@@ -512,6 +516,7 @@ int JsFormatter::formatStyleClass(StyleClass* clas) {
 // TODO: inline url images if url without quotes
 int JsFormatter::formatStyleProperty(StyleProperty* prop) {
   bool isFirst = true;
+  string prevPrev = " ";
   string prev = " ";
   *store << prop->name << ": \"";
 
@@ -524,7 +529,13 @@ int JsFormatter::formatStyleProperty(StyleProperty* prop) {
     if (value[0] == '"') {
       // escape quotes
       *store << "\\\"" << value.substr(1, value.length()-2) << "\\\"";
-    } else *store << value;
+    } else if (prevPrev == "url") {
+      int error = imgToBase64(value);
+      if (error < 0) return error;
+    } else {
+      *store << value;
+    }
+    prevPrev = prev;
     prev = value;
   }
   *store << '"';
@@ -1789,6 +1800,25 @@ bool JsFormatter::isMainExists(vector<Function*> functions) {
     if (func->name == "main") return true;
 
   return false;
+}
+
+
+int JsFormatter::imgToBase64(string& filename) {
+  ostringstream namebuf;
+  namebuf << styleModule->dir << '/' << filename;
+  string absname = namebuf.str();
+  if (!existsFile(absname)) return JSFORMATTER_STYLE_FILE_NOT_FOUND_ERROR;
+
+  ostringstream buf;
+  ifstream inp(absname);
+
+  buf << inp.rdbuf();
+  string content = buf.str();
+
+  *store << "\\\"data:image/" << getExtension(filename) << ";charset=utf-8;base64,"
+    << base64Encode(content) << "\\\"";
+
+  return ERROR_OK;
 }
 
 

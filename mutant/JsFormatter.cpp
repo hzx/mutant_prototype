@@ -333,8 +333,8 @@ int JsFormatter::formatClassFunction(Function* fn) {
 
 
 int JsFormatter::formatConstructor(Function* fn) {
-  *store << "var " << fn->clas->name << " = module__." <<
-    fn->clas->name << " = function(";
+  *store << "var " << clas->name << " = module__." <<
+    clas->name << " = function(";
 
   formatFunctionParams(fn->params);
 
@@ -344,15 +344,16 @@ int JsFormatter::formatConstructor(Function* fn) {
 
   // add base constructor call if have superClass and constructor without
   // params
-  if (fn->clas->superClass != nullptr) {
-    if (fn->clas->superClass->constructor->params.size() == 0) {
+  // TODO: clas->superClas->constructor must not happen - analyzer set it
+  if (clas->superClass != nullptr and clas->superClass->constructor != nullptr) {
+    if (clas->superClass->constructor->params.size() == 0) {
       storeIndent();
-      *store << fn->clas->name << ".base.constructor.call(this);\n";
+      *store << clas->name << ".base.constructor.call(this);\n";
     }
   }
 
   int error;
-  for (auto var: fn->clas->variables) {
+  for (auto var: clas->variables) {
     if (var->isStatic) continue;
 
     storeIndent();
@@ -360,11 +361,11 @@ int JsFormatter::formatConstructor(Function* fn) {
   }
 
   // add bind functions
-  for (auto fn: fn->clas->functions) {
-    if (!fn->isBind) continue;
+  for (auto f: clas->functions) {
+    if (!f->isBind) continue;
 
     storeIndent();
-    *store << "this." << fn->name << " = mutant.bind__(this, this." << fn->name
+    *store << "this." << f->name << " = mutant.bind__(this, this." << f->name
       << "__);\n";
   }
 

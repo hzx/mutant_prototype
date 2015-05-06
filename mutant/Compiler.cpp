@@ -69,8 +69,6 @@ int Compiler::compileTask(Task* task) {
   int error = compileCommonModule(task->moduleNames, module);
   if (error < 0) return error;
 
-  // TODO: use module imports to compile dependencies
-
   ostringstream buf;
   buf << getCurrentDir() << '/' << task->output;
   string filename = buf.str();
@@ -228,7 +226,6 @@ int Compiler::compileModule(Module* module) {
   // debug
   /* std::cout<< "module.parser ok" << std::endl; */
 
-  // TODO: load, parse all imports if not present - need for analyzer
   BaseModule* importModule;
   for (auto import: module->imports) {
     error = compileCommonModule(import->names, importModule);
@@ -240,6 +237,10 @@ int Compiler::compileModule(Module* module) {
     }
     import->module = importModule;
   }
+
+  // debug
+  /* saveNames(module->names, std::cout); */
+  /* std::cout << std::endl; */
 
   error = analyzer.process(env, module);
   if (error < 0) {
@@ -286,6 +287,9 @@ int Compiler::compileStyleModule(StyleModule* module) {
     }
   }
 
+  // debug
+  /* std::cout << "styleModule.lexer ok" << std::endl; */
+
   error = styleParser.parse(module);
   if (error < 0) {
     ostringstream buf;
@@ -294,6 +298,9 @@ int Compiler::compileStyleModule(StyleModule* module) {
     errorMsg = buf.str();
     return error;
   }
+
+  // debug
+  /* std::cout << "styleModule.parse ok" << std::endl; */
 
   // TODO: load parse all style imports if not present - need for analyzer
   BaseModule* importModule;
@@ -305,6 +312,10 @@ int Compiler::compileStyleModule(StyleModule* module) {
     import->module = reinterpret_cast<StyleModule*>(importModule);
   }
 
+  // debug
+  /* saveNames(module->names, std::cout); */
+  /* std::cout << std::endl; */
+
   error = analyzer.process(env, module);
   if (error < 0) {
     ostringstream buf;
@@ -315,6 +326,9 @@ int Compiler::compileStyleModule(StyleModule* module) {
     return error;
   }
 
+  // debug
+  /* std::cout << "styleModule analyzer.process ok" << std::endl; */
+
   ostringstream moduleBuf;
   error = jsFormatter.formatStyleModule(module, moduleBuf);
   if (error < 0) {
@@ -324,6 +338,9 @@ int Compiler::compileStyleModule(StyleModule* module) {
     errorMsg = buf.str();
     return error;
   }
+
+  // debug
+  /* std::cout << "styleModule jsformatter.formatStyleModule ok" << std::endl; */
 
   module->output = moduleBuf.str();
 

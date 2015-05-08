@@ -353,13 +353,6 @@ int JsFormatter::formatConstructor(Function* fn) {
   }
 
   int error;
-  for (auto var: clas->variables) {
-    if (var->isStatic) continue;
-
-    storeIndent();
-    error = formatClassVariable(var);
-  }
-
   // add bind functions
   for (auto f: clas->functions) {
     if (!f->isBind) continue;
@@ -367,6 +360,13 @@ int JsFormatter::formatConstructor(Function* fn) {
     storeIndent();
     *store << "this." << f->name << " = mutant.bind__(this, this." << f->name
       << "__);\n";
+  }
+
+  for (auto var: clas->variables) {
+    if (var->isStatic) continue;
+
+    storeIndent();
+    error = formatClassVariable(var);
   }
 
   for (auto node: fn->nodes) {

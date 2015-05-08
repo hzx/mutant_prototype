@@ -31,7 +31,7 @@ TEST_F(JsFormatterTest, formatModule) {
 
   string expected = "(function() {\n"
   "var module__ = {};\n\n"
-  "mutant.register__([\"osd\", \"ui\"], module__);\n"
+  "mutant.register__([\"osd\", \"ui\"], module__, null);\n"
   "})();\n";
 
   int error = formatter.formatModule(&module, store);
@@ -45,7 +45,7 @@ TEST_F(JsFormatterTest, formatModule) {
 TEST_F(JsFormatterTest, formatStyleModule) {
   string expected = "(function() {\n"
   "var module__ = {};\n\n"
-  "mutant.register__([\"osd\", \"ui\"], module__);\n"
+  "mutant.register__([\"osd\", \"ui\"], module__, null);\n"
   "})();\n";
 
   StyleModule module;

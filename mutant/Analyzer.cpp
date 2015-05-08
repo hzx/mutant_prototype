@@ -177,7 +177,6 @@ int Analyzer::processDicLiteral(DicLiteral* dic) {
 
 int Analyzer::processIdentifier(Identifier* ident) {
   int error;
-
   if (!ident->dontTouch) {
     if (isMemberNames(ident->names)) ident->isClassMember = true;
     processGroupDepends(ident->names);
@@ -244,23 +243,23 @@ int Analyzer::processVariable(Variable* var) {
 
 
 int Analyzer::processFunctionCall(FunctionCall* fcall) {
+  int error;
+  for (auto param: fcall->params) {
+    error = processRightNode(param);
+    if (error < 0) return error;
+  }
+
+  if (fcall->tail != nullptr) {
+    fcall->tail->dontTouch = true;
+    error = processRightNode(fcall->tail);
+    if (error < 0) return error;
+  }
+
   if (!fcall->dontTouch) {
     if (isBaseName(fcall->names)) {
       fcall->isBaseCall = true;
     } else if (isMemberNames(fcall->names)) {
       fcall->isClassMember = true;
-    }
-
-    int error;
-    for (auto param: fcall->params) {
-      error = processRightNode(param);
-      if (error < 0) return error;
-    }
-
-    if (fcall->tail != nullptr) {
-      fcall->tail->dontTouch = true;
-      error = processRightNode(fcall->tail);
-      if (error < 0) return error;
     }
 
     processGroupDepends(fcall->names);

@@ -1032,3 +1032,33 @@ TEST_F(ParserTest, parseDicDeclaration) {
   ASSERT_THAT(key2->value, testing::Eq("contact"));
   ASSERT_THAT(value2->names, testing::Eq(value2Names));
 }
+
+
+TEST_F(ParserTest, parseIfIndexExpression) {
+  file->content = R"(void main() {
+  if left[i] isnot right[i] { return false; }
+}
+)";
+
+  int lexerError = lexer.tokenize(file->content, file->tokens);
+  ASSERT_THAT(lexerError, ERROR_OK);
+
+  int parserError = parser.parse(&module);
+  ASSERT_THAT(parserError, ERROR_OK);
+
+  ASSERT_THAT(module.functions.size(), 1);
+  Function* func = module.functions[0];
+
+  ASSERT_THAT(func->nodes.size(), 1);
+  ASSERT_THAT(func->nodes[0]->code, Node::IF);
+  If* if_ = reinterpret_cast<If*>(func->nodes[0]);
+
+  ASSERT_TRUE(if_->condition != nullptr);
+  ASSERT_THAT(if_->condition->code, Node::NOT_EQUAL);
+
+  NotEqual* ne = reinterpret_cast<NotEqual*>(if_->condition);
+  ASSERT_TRUE(ne->left != nullptr);
+  ASSERT_THAT(ne->left->code, Node::INDEX);
+  ASSERT_TRUE(ne->right != nullptr);
+  ASSERT_THAT(ne->right->code, Node::INDEX);
+}

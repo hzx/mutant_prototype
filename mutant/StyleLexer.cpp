@@ -115,6 +115,7 @@ int StyleLexer::tokenize(string& source_, vector<Token>& tokens) {
         left = cursor;
         break;
 
+      case '-':
       case '0':
       case '1':
       case '2':

@@ -1860,6 +1860,7 @@ int Parser::parseBlockNodes(vector<Node*>& nodes, int left, int right) {
 }
 
 
+// TODO: move null, true, false after detectAimNode
 int Parser::parseRightNode(Node*& node, int left, int right) {
   if (left >= right) return right;
 
@@ -1912,6 +1913,9 @@ int Parser::parseRightNode(Node*& node, int left, int right) {
   }
 
   int aim = detectAimRight(left, right);
+
+  // debug
+  /* std::cout << "parseRightNode aim: " << aim << '\n'; */
 
   switch (aim) {
     case AIM_ARRAY_DECLARATION:

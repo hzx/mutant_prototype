@@ -231,7 +231,11 @@ int Compiler::compileModule(Module* module) {
     error = compileCommonModule(import->names, importModule);
     if (error < 0) {
       ostringstream buf;
+      buf << "error: " << errorMsg;
+      buf << "module: ";
       saveNames(module->names, buf);
+      buf << ", import module names: ";
+      saveNames(import->names, buf);
       errorMsg = buf.str();
       return error;
     }

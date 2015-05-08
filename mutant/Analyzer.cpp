@@ -175,6 +175,11 @@ int Analyzer::processDicLiteral(DicLiteral* dic) {
 }
 
 
+// debug
+/* vector<string> evNames = {"onUrlClick"}; */
+extern vector<string> evNames;
+
+
 int Analyzer::processIdentifier(Identifier* ident) {
   int error;
   if (!ident->dontTouch) {
@@ -1289,8 +1294,10 @@ bool Analyzer::isClassMemberName(Class* clas, string& name) {
     if (name == var->name) return true;
   }
 
-  for (Function* fn: clas->functions)
+  for (Function* fn: clas->functions) {
+    if (fn->isStatic) continue;
     if (name == fn->name) return true;
+  }
 
   if (clas->superClass != nullptr)
     return isClassMemberName(clas->superClass, name);
@@ -1302,7 +1309,7 @@ bool Analyzer::isClassMemberName(Class* clas, string& name) {
 // check names in block variables and parent block variables
 // and then check class members
 bool Analyzer::isMemberNames(vector<string>& names) {
-  if (clas == nullptr or blocks.empty() or names.empty()) return false;
+  if (clas == nullptr or names.empty()) return false;
 
   string name;
   switch (names.size()) {
@@ -1318,13 +1325,15 @@ bool Analyzer::isMemberNames(vector<string>& names) {
   }
 
   // check inside current function blocks
-  BlockNode* block = blocks.top();
-  while (block != nullptr) {
-    // dont set this inside lambda
-    if (block->code == Node::LAMBDA) return false;
-    for (Variable* var: block->variables) // encounter local variable name
-      if (name == var->name) return false;
-    block = block->parent;
+  if (!blocks.empty()) {
+    BlockNode* block = blocks.top();
+    while (block != nullptr) {
+      // dont set this inside lambda
+      if (block->code == Node::LAMBDA) return false;
+      for (Variable* var: block->variables) // encounter local variable name
+        if (name == var->name) return false;
+      block = block->parent;
+    }
   }
 
   return isClassMemberName(clas, name);

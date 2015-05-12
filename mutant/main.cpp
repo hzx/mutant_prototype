@@ -15,8 +15,12 @@ int main(int argc, const char** argv) {
 
   string projectFilename = getCurrentDir() + "/project.mutant";
   if (not existsFile(projectFilename)) {
-    cout << "Project file not exists:\n" << projectFilename << endl;
-    return -1;
+    // try search project in parent dir
+    /* projectFilename = getCurrentDir() + "/../project.mutant"; */ 
+    /* if (not existsFile(projectFilename)) { */
+      cout << "Project file not exists:\n" << projectFilename << endl;
+      return -1;
+    /* } */
   }
 
   Environment env;

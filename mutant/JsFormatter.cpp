@@ -486,7 +486,12 @@ int JsFormatter::formatClass(Class* clas) {
 
 int JsFormatter::formatStyleClass(StyleClass* clas) {
   *store << "var " << clas->name << " = module__."
-    << clas->name << " = {\n";
+    << clas->name;
+  if (clas->superNames.empty()) {
+    *store << " = [\n";
+  } else {
+    *store << " = mutant.extendsStyle__([\n";
+  }
 
   incIndent();
 
@@ -503,23 +508,23 @@ int JsFormatter::formatStyleClass(StyleClass* clas) {
   decIndent();
 
   if (!clas->properties.empty()) *store << '\n';
-  *store << "};\n";
-  if (!clas->superNames.empty()) {
-    *store << "mutant.augment__(" << clas->name << ", ";
+  if (clas->superNames.empty()) {
+    *store << "];\n";
+  } else {
+    *store << "], ";
     formatNames(clas->superNames);
-    *store << ");\n\n";
-  } else *store << '\n';
+    *store << ");\n";
+  }
 
   return ERROR_OK;
 }
 
 
-// TODO: inline url images if url without quotes
 int JsFormatter::formatStyleProperty(StyleProperty* prop) {
   bool isFirst = true;
   string prevPrev = " ";
   string prev = " ";
-  *store << prop->name << ": \"";
+  *store << "\"" << prop->name << "\", \"";
 
   for (auto value: prop->values) {
     if (isFirst) isFirst = false;

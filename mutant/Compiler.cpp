@@ -38,8 +38,13 @@ mutant.extends__ = function(child, base) {
   child.base = base.prototype;
 };
 
+
+mutant.extendsStyle__ = function(child, base) {
+  return base.concat(child);
+};
+
 mutant.augment__ = function(dest, src) {
-  for (name in src) dest[name] = src[name];
+  for (name in src) if (!(name in dest)) dest[name] = src[name];
 }
 
 mutant.bind__ = function(context, func) {

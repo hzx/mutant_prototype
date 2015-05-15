@@ -263,6 +263,7 @@ bool isTagName(vector<string>& names) {
     case 'i':
       if (name == "i") return true;
       if (name == "in") return true;
+      if (name == "img") return true;
       if (name == "input") return true;
       break;
     case 'm':

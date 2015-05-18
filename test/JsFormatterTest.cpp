@@ -704,7 +704,39 @@ TEST_F(JsFormatterTest, formatTag) {
 
 // TODO: implement
 TEST_F(JsFormatterTest, formatTry) {
-  ASSERT_TRUE(false);
+  string expected = R"(try {
+  foo();
+} catch (e) {
+  a = b;
+}
+)";
+
+  FunctionCall* foo = new FunctionCall();
+  foo->names = {"foo"};
+
+  Variable* e = new Variable();
+  e->typeNames = {"object"};
+  e->name = "e";
+
+  Identifier* b = new Identifier();
+  b->names = {"b"};
+  Identifier* ab = new Identifier();
+  ab->names = {"a"};
+  ab->node = b;
+
+  Catch* catch_ = new Catch();
+  catch_->params.push_back(e);
+  catch_->nodes.push_back(ab);
+
+  unique_ptr<Try> try_(new Try());
+  try_->nodes.push_back(foo);
+  try_->catches.push_back(catch_);
+
+  int error = formatter.formatTry(try_.get());
+  ASSERT_THAT(error, ERROR_OK);
+
+  string actual = store.str();
+  ASSERT_THAT(actual, expected);
 }
 
 

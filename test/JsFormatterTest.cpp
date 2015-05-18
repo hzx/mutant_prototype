@@ -344,9 +344,12 @@ TEST_F(JsFormatterTest, formatStyleClass) {
 ], baseApp);
 )";
 
+  Names* superNames = new Names();
+  superNames->names = {"baseApp"};
+
   unique_ptr<StyleClass> clas(new StyleClass());
   clas->name = "app";
-  clas->superNames = {"baseApp"};
+  clas->superNames.push_back(superNames);
 
   StyleProperty* prop1 = new StyleProperty();
   prop1->name = "padding";
@@ -363,6 +366,30 @@ TEST_F(JsFormatterTest, formatStyleClass) {
   string actual = store.str();
 
   ASSERT_THAT(error, ERROR_OK);
+  ASSERT_THAT(actual, expected);
+}
+
+TEST_F(JsFormatterTest, formatStyleClassExtendsMulti) {
+  // buttonAdd: ui.button, buttonAddIcon {
+  // }
+  string expected = R"(var buttonAdd = module__.buttonAdd = mutant.extendsStyleMulti__([
+], [ui.button, buttonAddIcon]);
+)";
+
+  Names* names1 = new Names();
+  names1->names = {"ui", "button"};
+  Names* names2 = new Names();
+  names2->names = {"buttonAddIcon"};
+
+  unique_ptr<StyleClass> clas(new StyleClass());
+  clas->name = "buttonAdd";
+  clas->superNames.push_back(names1);
+  clas->superNames.push_back(names2);
+
+  int error = formatter.formatStyleClass(clas.get());
+  ASSERT_THAT(error, ERROR_OK);
+
+  string actual = store.str();
   ASSERT_THAT(actual, expected);
 }
 

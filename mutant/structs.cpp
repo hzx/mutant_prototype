@@ -779,6 +779,7 @@ StyleClass::StyleClass() {
 
 
 StyleClass::~StyleClass() {
+  for (auto s: superNames) delete s;
   for (auto prop: properties) delete prop;
 }
 

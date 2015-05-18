@@ -871,7 +871,8 @@ class StyleClass: public Type {
 public:
   StyleClass();
   ~StyleClass();
-  vector<string> superNames;
+  /* vector<string> superNames; */
+  vector<Names*> superNames;
   StyleClass* superClass = nullptr;
   vector<StyleProperty*> properties;
 };

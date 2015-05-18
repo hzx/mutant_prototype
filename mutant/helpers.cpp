@@ -268,6 +268,8 @@ bool isTagName(vector<string>& names) {
       break;
     case 'm':
       if (name == "meta") return true;
+    case 'p':
+      if (name == "pre") return true;
     case 's':
       if (name == "span") return true;
       if (name == "strong") return true;

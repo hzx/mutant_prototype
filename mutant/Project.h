@@ -31,6 +31,7 @@ public:
 class Project {
 public:
   ~Project();
+  string dir;
   vector<string> paths;
   vector<Task*> tasks;
   string filename;
@@ -38,6 +39,8 @@ public:
 };
 
 
+// find project in dir and parent dirs
+string findProject(string& dir);
 int parseProject(Project& project);
 int parseProjectOption(Project& project, int left, int cursor);
 int parseTask(string& content, Task* task, int left, int right);

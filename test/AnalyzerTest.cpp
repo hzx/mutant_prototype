@@ -190,9 +190,12 @@ TEST_F(AnalyzerTest, processStyleDependGroups) {
 
   commonButton->properties.push_back(s_prop);
 
+  Names* snames = new Names();
+  snames->names = {"commonButton"};
+
   StyleClass* sendButton = new StyleClass();
   sendButton->name = "sendButton";
-  sendButton->superNames = {"commonButton"};
+  sendButton->superNames.push_back(snames);
 
   StyleProperty* c_prop = new StyleProperty();
   c_prop->name = "color";
@@ -290,9 +293,12 @@ TEST_F(AnalyzerTest, sortStyleGroups) {
 
   commonButton->properties.push_back(s_prop);
 
+  Names* snames = new Names();
+  snames->names = {"commonButton"};
+
   StyleClass* sendButton = new StyleClass();
   sendButton->name = "sendButton";
-  sendButton->superNames = {"commonButton"};
+  sendButton->superNames.push_back(snames);
 
   StyleProperty* c_prop = new StyleProperty();
   c_prop->name = "color";

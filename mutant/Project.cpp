@@ -14,6 +14,10 @@ Project::~Project() {
 }
 
 
+string findProject(string& dir) {
+}
+
+
 int parseProject(Project& project) {
   /* project.filename = getCurrentDir() + "/project.mutant"; */
   /* if (not existsPath(project.filename)) return ERROR_FAIL; */

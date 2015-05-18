@@ -485,12 +485,17 @@ int JsFormatter::formatClass(Class* clas) {
 
 
 int JsFormatter::formatStyleClass(StyleClass* clas) {
+  bool isExtendsMulti = false;
   *store << "var " << clas->name << " = module__."
     << clas->name;
   if (clas->superNames.empty()) {
     *store << " = [\n";
   } else {
-    *store << " = mutant.extendsStyle__([\n";
+    isExtendsMulti = clas->superNames.size() > 1;
+    if (isExtendsMulti)
+      *store << " = mutant.extendsStyleMulti__([\n";
+    else 
+      *store << " = mutant.extendsStyle__([\n";
   }
 
   incIndent();
@@ -512,7 +517,18 @@ int JsFormatter::formatStyleClass(StyleClass* clas) {
     *store << "];\n";
   } else {
     *store << "], ";
-    formatNames(clas->superNames);
+    if (isExtendsMulti) {
+      *store << "[";
+      bool isFirst = true;
+      for (auto sn: clas->superNames) {
+        if (isFirst) isFirst = false;
+        else *store << ", ";
+        formatNames(sn->names);
+      }
+      *store << "]";
+    } else {
+      formatNames(clas->superNames[0]->names);
+    }
     *store << ");\n";
   }
 

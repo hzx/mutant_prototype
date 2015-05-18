@@ -138,15 +138,19 @@ int Analyzer::processClass(Class* clas) {
 // search for class superClass in other groups
 // and check dependency
 int Analyzer::processStyleClass(StyleClass* clas) {
-  if (clas->superNames.empty() or clas->superNames.size() != 1)
+  if (clas->superNames.empty())
     return ERROR_OK;
 
-  for (auto group: styleModule->groups) {
-    if (group == styleFileGroup) continue; // skip current group
-    for (auto oclas: group->classes)
-      if (clas->superNames[0] == oclas->name)
-        /* styleFileGroup->dependGroups.push_back(group); */
-        addStyleGroup(styleFileGroup->dependGroups, group);
+  for (auto names: clas->superNames) {
+    if (names->names.size() != 1) continue;
+
+    for (auto group: styleModule->groups) {
+      if (group == styleFileGroup) continue; // skip current group
+      for (auto oclas: group->classes)
+        if (names->names[0] == oclas->name)
+          /* styleFileGroup->dependGroups.push_back(group); */
+          addStyleGroup(styleFileGroup->dependGroups, group);
+    }
   }
 
   return ERROR_OK;

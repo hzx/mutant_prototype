@@ -43,6 +43,17 @@ mutant.extendsStyle__ = function(child, base) {
   return base.concat(child);
 };
 
+mutant.extendsStyleMulti__ = function(child, bases) {
+  var base;
+  for (var i = 0; i < bases.length; ++i) {
+    base = bases[i];
+    for (var p = 0; p < base.length; ++p) {
+      child.push(base[p]);
+    }
+  }
+  return child;
+};
+
 mutant.augment__ = function(dest, src) {
   for (name in src) if (!(name in dest)) dest[name] = src[name];
 }

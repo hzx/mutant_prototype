@@ -96,8 +96,15 @@ int StyleParser::parseClass(StyleClass* clas, int left, int right) {
   int cursor = left + 1;
 
   if (tokens->at(cursor).word[0] == ':') {
-    cursor = parseNames(clas->superNames, cursor + 1, openBracket);
-    if (cursor < 0) return cursor;
+    ++cursor;
+    while (cursor < openBracket) {
+      unique_ptr<Names> names(new Names());
+      /* cursor = parseNames(clas->superNames, cursor + 1, openBracket); */
+      cursor = parseNames(names->names, cursor, openBracket);
+      if (cursor < 0) return cursor;
+      clas->superNames.push_back(names.release());
+      if (tokens->at(cursor).word[0] == ',') ++cursor;
+    }
   }
 
   int prev;

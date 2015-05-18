@@ -65,7 +65,8 @@ TEST_F(StyleParserTest, parseClass) {
   vector<string> superNames = {"baseApp"};
 
   ASSERT_THAT(clas->name, testing::Eq("app"));
-  ASSERT_THAT(clas->superNames, superNames);
+  ASSERT_THAT(clas->superNames.size(), 1);
+  ASSERT_THAT(clas->superNames[0]->names, superNames);
   ASSERT_THAT(clas->properties.size(), 2);
   
   StyleProperty* prop1 = clas->properties[0];
@@ -77,4 +78,28 @@ TEST_F(StyleParserTest, parseClass) {
   ASSERT_THAT(prop1->values, values1);
   ASSERT_THAT(prop2->name, testing::Eq("backgroundColor"));
   ASSERT_THAT(prop2->values, values2);
+}
+
+
+TEST_F(StyleParserTest, parseClassExtendsMulti) {
+  file->content = R"(buttonAdd: ui.button, buttonAddIcon {
+}
+)";
+
+  int lexerError = lexer.tokenize(file->content, file->tokens);
+  ASSERT_THAT(lexerError, ERROR_OK);
+
+  int parserError = parser.parse(&module);
+  ASSERT_THAT(parserError, ERROR_OK);
+
+  ASSERT_THAT(module.classes.size(), 1);
+
+  StyleClass* clas = module.classes[0];
+  ASSERT_THAT(clas->name, testing::Eq("buttonAdd"));
+  ASSERT_THAT(clas->superNames.size(), 2);
+
+  vector<string> superUiButton = {"ui", "button"};
+  vector<string> superButtonAddIcon = {"buttonAddIcon"};
+  ASSERT_THAT(clas->superNames[0]->names, superUiButton);
+  ASSERT_THAT(clas->superNames[1]->names, superButtonAddIcon);
 }

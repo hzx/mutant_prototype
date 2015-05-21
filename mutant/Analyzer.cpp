@@ -21,8 +21,14 @@ int Analyzer::process(Environment* env, StyleModule* module) {
 
 int Analyzer::processModule(Module* module) {
   this->module = module;
-
   int error;
+
+  // set superClass for classes
+  for (auto cl: module->classes) {
+    error = setSuperClassLink(cl);
+    if (error < 0) return error;
+  }
+
   for (auto group: module->groups) {
     error = processGroup(group);
     if (error < 0) return error;
@@ -90,11 +96,8 @@ int Analyzer::processStyleGroup(StyleFileGroup* group) {
 int Analyzer::processClass(Class* clas) {
   int error;
 
-  // set superClass for this class
   if (not clas->superNames.empty()) {
     processGroupDepends(clas->superNames);
-    error = processSuperClass(clas);
-    if (error < 0) return error;
   }
 
   if (clas->constructor == nullptr) { // add default constructor
@@ -1435,6 +1438,48 @@ int Analyzer::processGroupDepends(vector<string>& names) {
       /* fileGroup->dependGroups.push_back(gr); */
       addGroup(fileGroup->dependGroups, gr);
     }
+  }
+
+  return ERROR_OK;
+}
+
+
+int Analyzer::setSuperClassLink(Class* clas) {
+  if (clas->superNames.empty()) return ERROR_OK;
+
+  if (clas->superNames.size() == 1) { // search in module classes
+    string name = clas->superNames[0];
+    for (auto sclas: module->classes) {
+      if (sclas->name == name) {
+        clas->superClass = sclas;
+        return ERROR_OK;
+      }
+    }
+  } else { // > 1, search class im import modules
+    vector<string> moduleNames(clas->superNames.begin(), clas->superNames.end() - 1);
+    string name = clas->superNames.back();
+    Module* imodule = nullptr;
+    // search module
+    for (auto import: module->imports) {
+      // skip non code modules (styles)
+      if (import->module->code != MODULE_MUT) continue;
+      if (import->module->names == moduleNames) {
+        imodule = reinterpret_cast<Module*>(import->module);
+        break;
+      }
+    }
+
+    if (imodule == nullptr) return ANALYZER_SUPERCLASS_MODULE_NOT_FOUND_ERROR;
+
+    // search class in import module
+    for (auto sclass: imodule->classes) {
+      if (sclass->name == name) {
+        clas->superClass = sclass;
+        return ERROR_OK;
+      }
+    }
+
+    return ANALYZER_SUPERCLASS_NOT_FOUND_ERROR;
   }
 
   return ERROR_OK;

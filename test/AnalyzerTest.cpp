@@ -116,6 +116,11 @@ TEST_F(AnalyzerTest, processThisIdentifier) {
 }
 
 
+TEST_F(AnalyzerTest, processThisIdentifierMulti) {
+  ASSERT_TRUE(false);
+}
+
+
 TEST_F(AnalyzerTest, processDependGroups) {
   // make one group depends from another inside module
   // group1:

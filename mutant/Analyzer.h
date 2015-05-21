@@ -91,6 +91,7 @@ public:
   bool isNamesFromOtherGroup(vector<string>& names, FileGroup* group);
   int processSuperClass(Class* clas);
   int processGroupDepends(vector<string>& names);
+  int setSuperClassLink(Class* clas);
 
   // common context for process
   Environment* env = nullptr;

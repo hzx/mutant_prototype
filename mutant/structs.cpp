@@ -66,6 +66,10 @@ ExternType::ExternType() {
 }
 
 
+/* Node::~Node() { */
+/* } */
+
+
 Nodes::~Nodes() {
   for (auto node: nodes) delete node;
 }
@@ -99,6 +103,11 @@ NullLiteral::NullLiteral() {
 ArrayLiteral::ArrayLiteral()
     : type(nullptr) {
   code = Node::ARRAY_LITERAL;
+}
+
+
+ArrayLiteral::~ArrayLiteral() {
+  for (auto n: nodes) delete n;
 }
 
 
@@ -823,6 +832,7 @@ StyleModule::~StyleModule() {
   for (auto g: groups) delete g;
   for (auto i: imports) delete i;
   for (auto c: classes) delete c;
+  for (auto n: namespaces) delete n;
 }
 
 

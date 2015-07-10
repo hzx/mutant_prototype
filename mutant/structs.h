@@ -184,6 +184,9 @@ public:
   int code = 0;
   int priority = 1000000;
   bool dontTouch = false;
+
+  // TODO: fix segmentation fault
+  /* virtual ~Node(); */
 };
 
 
@@ -238,6 +241,7 @@ public:
 class ArrayLiteral: public Node {
 public:
   ArrayLiteral();
+  ~ArrayLiteral();
   Type* type;
   vector<Node*> nodes;
 };
@@ -860,6 +864,16 @@ public:
 };
 
 
+class StyleClass;
+
+
+class StyleNamespace {
+public:
+  string name;
+  vector<StyleClass*> classes;
+};
+
+
 class StyleProperty {
 public:
   string name;
@@ -872,6 +886,7 @@ public:
   StyleClass();
   ~StyleClass();
   /* vector<string> superNames; */
+  StyleNamespace* namespace_ = nullptr; // just ref, not own
   vector<Names*> superNames;
   StyleClass* superClass = nullptr;
   vector<StyleProperty*> properties;
@@ -902,6 +917,7 @@ public:
   size_t sortIndex = 0;
 
   /* vector<StyleVariable*> variables; */
+  vector<StyleNamespace*> namespaces;
   vector<StyleClass*> classes;
   vector<StyleFileGroup*> dependGroups;
 };
@@ -953,6 +969,7 @@ public:
   ~StyleModule();
   vector<StyleFileGroup*> groups;
   vector<StyleImport*> imports;
+  vector<StyleNamespace*> namespaces;
   vector<StyleClass*> classes;
 
   vector<StyleModule*> formatOrder; // just links

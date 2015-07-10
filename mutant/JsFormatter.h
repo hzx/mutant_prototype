@@ -39,6 +39,7 @@ public:
 
   int formatEnum(Enum* en);
   int formatClass(Class* clas);
+  int formatStyleNamespace(StyleNamespace* ns);
   int formatStyleClass(StyleClass* clas);
   int formatStyleProperty(StyleProperty* prop);
   int formatIf(If* ifn);

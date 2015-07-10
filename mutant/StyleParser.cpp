@@ -47,6 +47,16 @@ int StyleParser::parseGlobal(int left, int right) {
     if (cursor >= 0) module->imports.push_back(import.release());
     return cursor;
   }
+  
+  if (token.word == "namespace" and isNextTokenIdentifier(left + 1, right)) {
+    std::unique_ptr<StyleNamespace> ns(new StyleNamespace());
+    int cursor = parseNamespace(ns.get(), left + 1, right);
+    if (cursor >= 0) {
+      fileGroup->namespaces.push_back(ns.get());
+      module->namespaces.push_back(ns.release());
+    }
+    return cursor;
+  }
 
   int aim = detectGlobalAim(left, right);
   switch (aim) {
@@ -66,6 +76,27 @@ int StyleParser::parseGlobal(int left, int right) {
 }
 
 
+int StyleParser::parseNamespaceBody(int left, int right) {
+  if (right - left <= 1) return right; // dont parse empty
+
+  int aim = detectGlobalAim(left, right);
+  switch (aim) {
+    case STYLE_AIM_CLASS:
+      {
+        std::unique_ptr<StyleClass> clas(new StyleClass());
+        int cursor = parseClass(clas.get(), left, right);
+        if (cursor >= 0) {
+          clas->namespace_ = namespace_;
+          namespace_->classes.push_back(clas.release());
+        }
+        return cursor;
+      }
+  }
+
+  return PARSER_NAMESPACE_BODY_PATTERN_ERROR;
+}
+
+
 int StyleParser::parseImport(StyleImport* import, int left, int right) {
   int semicolon = findSymbol(';', left, right);
   if (semicolon == right) return PARSER_NO_SEMICOLON_ERROR;
@@ -79,6 +110,32 @@ int StyleParser::parseImport(StyleImport* import, int left, int right) {
     import->alias = import->names.back();
 
   return semicolon + 1;
+}
+
+
+int StyleParser::parseNamespace(StyleNamespace* ns, int left, int right) {
+  ns->name = tokens->at(left).word;
+
+  int openBracket = findSymbol('{', left, right);
+  if (openBracket == right)
+    return NAMESPACE_OPEN_BRACKET_ERROR;
+
+  int closeBracket = findPairCurlyBracket(openBracket, right);
+  if (closeBracket == right)
+    return NAMESPACE_CLOSE_BRACKET_ERROR;
+
+  namespace_ = ns;
+
+  int prev;
+  int cursor = openBracket + 1;
+  while (cursor < closeBracket) {
+    prev = cursor;
+    cursor = parseNamespaceBody(cursor, closeBracket);
+    if (cursor < 0) return cursor;
+    if (prev == cursor) return PARSER_PERPETUAL_LOOP;
+  }
+
+  return closeBracket + 1;
 }
 
 
@@ -247,4 +304,10 @@ int StyleParser::findCommaDelimiter(int left, int right) {
     }
   }
   return right;
+}
+
+
+bool StyleParser::isNextTokenIdentifier(int cursor, int right) {
+  if (cursor >= right) return false;
+  return isIdentifierFirst(tokens->at(cursor).word[0]);
 }

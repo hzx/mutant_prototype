@@ -221,6 +221,11 @@ TEST_F(AnalyzerTest, processStyleDependGroups) {
 }
 
 
+TEST_F(AnalyzerTest, processStyleDependGroupsNamespace) {
+  ASSERT_TRUE(false);
+}
+
+
 TEST_F(AnalyzerTest, sortGroups) {
   // group1 depends from group2
   // groups pushed in order group1, group2

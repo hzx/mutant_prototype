@@ -89,6 +89,14 @@ int Analyzer::processStyleGroup(StyleFileGroup* group) {
     if (error < 0) return error;
   }
 
+  for (auto ns: group->namespaces) {
+    for (auto clas: ns->classes) {
+      clas->namespace_ = ns;
+      error = processStyleClass(clas);
+      if (error < 0) return error;
+    }
+  }
+
   return ERROR_OK;
 }
 
@@ -145,16 +153,83 @@ int Analyzer::processStyleClass(StyleClass* clas) {
     return ERROR_OK;
 
   for (auto names: clas->superNames) {
-    if (names->names.size() != 1) continue;
+    // if class in namespace check namespace classes first
+    if (names->names.size() == 1) {
+      if (clas->namespace_ != nullptr) {
+        // skip group dependencies from the same group namespace.classes
+        for (auto cl: clas->namespace_->classes) {
+          if (names->names[0] == cl->name) return ERROR_OK;
+        }
+      } else {
+        // skip group dependencies from the same group classes
+        for (auto cl: styleFileGroup->classes) {
+          if (names->names[0] == cl->name) return ERROR_OK;
+        }
+      }
 
+      // search in other groups classes
+      for (auto group: styleModule->groups) {
+        if (group == styleFileGroup) continue; // skip current group
+        for (auto cl: group->classes) {
+          if (names->names[0] == cl->name) {
+            addStyleGroup(styleFileGroup->dependGroups, group);
+            return ERROR_OK;
+          }
+        }
+      }
+
+      continue;
+    }
+
+    if (names->names.size() == 2) {
+      // skip group dependencies from the same group namespace.class
+      for (auto ns: styleFileGroup->namespaces) {
+        if (ns->name == names->names[0]) { // found namespace
+          for (auto cl: ns->classes) {
+            if (names->names[1] == cl->name) return ERROR_OK;
+          }
+        }
+      }
+    }
+
+    // search in other groups namespaces classes
     for (auto group: styleModule->groups) {
       if (group == styleFileGroup) continue; // skip current group
-      for (auto oclas: group->classes)
-        if (names->names[0] == oclas->name)
-          /* styleFileGroup->dependGroups.push_back(group); */
-          addStyleGroup(styleFileGroup->dependGroups, group);
+      for (auto ns: group->namespaces) {
+        if (names->names[0] == ns->name) {
+          for (auto cl: ns->classes) {
+            if (names->names[1] == cl->name) {
+              addStyleGroup(styleFileGroup->dependGroups, group);
+              return ERROR_OK;
+            }
+          }
+        }
+      }
     }
   }
+
+  /* for (auto names: clas->superNames) { */
+  /*   if (names->names.size() == 1) { */
+  /*     for (auto group: styleModule->groups) { */
+  /*       if (group == styleFileGroup) continue; // skip current group */
+  /*       for (auto oclas: group->classes) */
+  /*         if (names->names[0] == oclas->name) */
+  /*           /1* styleFileGroup->dependGroups.push_back(group); *1/ */
+  /*           addStyleGroup(styleFileGroup->dependGroups, group); */
+  /*     } */
+  /*   } else { */
+  /*     // search in namespaces */
+  /*     if (names->names.size() == 2) { */
+  /*       for (auto ns: group->namespaces) */
+  /*         if (names->names[0] == ns->name) { */
+  /*           for (auto oclas: ns->classes) { */
+  /*             if (names->names[1] == oclas->name) */
+  /*               addStyleGroup(styleFileGroup->dependGroup, group); */
+  /*           } */
+  /*         } */
+  /*     } */
+  /*   } */
+  /* } */
 
   return ERROR_OK;
 }

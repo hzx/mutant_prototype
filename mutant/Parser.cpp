@@ -14,7 +14,6 @@ using std::ostringstream;
 // TODO: add +=, -=, *=, /=, %= operations
 
 
-string ZERO_TOKEN_WORD = "\0";
 string const CASE_WORD = "case";
 string const DEFAULT_WORD = "default";
 /* vector<string> IDENTIFIER_OPERATORS = {"or", "xor", "and", "not", "is", */

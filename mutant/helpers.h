@@ -12,6 +12,7 @@ using std::string;
 using std::vector;
 using std::ostream;
 
+static string ZERO_TOKEN_WORD = "\0";
 
 void tokensToWords(vector<Token>& tokens, vector<string>& words);
 void storeTokens(vector<Token>& tokens, int left, int right, ostream& store);

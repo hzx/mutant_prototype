@@ -108,6 +108,11 @@ int JsFormatter::formatStyleFileGroup(StyleFileGroup* group) {
     if (error < 0) return error;
   }
 
+  for (auto ns: group->namespaces) {
+    error = formatStyleNamespace(ns);
+    if (error < 0) return error;
+  }
+
   return ERROR_OK;
 }
 
@@ -484,10 +489,31 @@ int JsFormatter::formatClass(Class* clas) {
 }
 
 
+int JsFormatter::formatStyleNamespace(StyleNamespace* ns) {
+  *store << "(function() {\n"
+    << "var " << ns->name << " = module__." << ns->name << " = {};\n\n";
+
+  int error;
+  for (auto cl: ns->classes) {
+    error = formatStyleClass(cl);
+    if (error < 0) return error;
+  }
+
+  *store << "})();\n";
+
+  return ERROR_OK;
+}
+
+
 int JsFormatter::formatStyleClass(StyleClass* clas) {
   bool isExtendsMulti = false;
-  *store << "var " << clas->name << " = module__."
-    << clas->name;
+  if (clas->namespace_ != nullptr) {
+    *store << "var " << clas->name << " = "
+      << clas->namespace_->name << "." << clas->name;
+  } else {
+    *store << "var " << clas->name << " = module__."
+      << clas->name;
+  }
   if (clas->superNames.empty()) {
     *store << " = [\n";
   } else {
@@ -523,10 +549,12 @@ int JsFormatter::formatStyleClass(StyleClass* clas) {
       for (auto sn: clas->superNames) {
         if (isFirst) isFirst = false;
         else *store << ", ";
+        /* if (clas->namespace_ != nullptr) *store << clas->namespace_ << '.'; */
         formatNames(sn->names);
       }
       *store << "]";
     } else {
+      /* if (clas->namespace_ != nullptr) *store << clas->namespace_->name << '.'; */
       formatNames(clas->superNames[0]->names);
     }
     *store << ");\n";

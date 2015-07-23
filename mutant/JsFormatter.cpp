@@ -491,6 +491,7 @@ int JsFormatter::formatClass(Class* clas) {
 
 int JsFormatter::formatStyleNamespace(StyleNamespace* ns) {
   *store << "(function() {\n"
+    << "var ns__ = {};\n\n"
     << "var " << ns->name << " = module__." << ns->name << " = {};\n\n";
 
   int error;
@@ -499,7 +500,8 @@ int JsFormatter::formatStyleNamespace(StyleNamespace* ns) {
     if (error < 0) return error;
   }
 
-  *store << "})();\n";
+  *store << "module__." << ns->name << " = ns__;\n"
+    "})();\n";
 
   return ERROR_OK;
 }
@@ -509,7 +511,7 @@ int JsFormatter::formatStyleClass(StyleClass* clas) {
   bool isExtendsMulti = false;
   if (clas->namespace_ != nullptr) {
     *store << "var " << clas->name << " = "
-      << clas->namespace_->name << "." << clas->name;
+      << "ns__." << clas->name;
   } else {
     *store << "var " << clas->name << " = module__."
       << clas->name;

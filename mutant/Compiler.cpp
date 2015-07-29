@@ -8,7 +8,6 @@
 
 
 using std::unique_ptr;
-using std::ostringstream;
 using std::ofstream;
 using std::cout;
 using std::endl;
@@ -85,11 +84,11 @@ int Compiler::compileTask(Task* task) {
   int error = compileCommonModule(task->moduleNames, module);
   if (error < 0) return error;
 
-  ostringstream buf;
-  buf << getCurrentDir() << '/' << task->output;
-  string filename = buf.str();
+  std::ostringstream buf;
+  buf << project->dir << '/' << task->output;
+  std::string filename = buf.str();
 
-  vector<BaseModule*> skip;
+  std::vector<BaseModule*> skip;
   if (not task->skipModuleNames.empty()) {
     Module* code = getEnvModule(task->skipModuleNames);
     if (code != nullptr) {
@@ -99,7 +98,7 @@ int Compiler::compileTask(Task* task) {
       if (style != nullptr)
         fillModuleQueue(style, skip);
       else {
-        ostringstream buf;
+        std::ostringstream buf;
         buf << "skip module not loaded: ";
         bool isFirst = true;
         for (auto name: task->skipModuleNames) {
@@ -152,7 +151,7 @@ int Compiler::compileTask(Task* task) {
 // add module if not in orderedModules
 
 
-int Compiler::compileCommonModule(vector<string>& names, BaseModule*& moduleResult) {
+int Compiler::compileCommonModule(std::vector<std::string>& names, BaseModule*& moduleResult) {
   moduleResult = nullptr;
   // search module in environment
   auto codeModule = getEnvModule(names);
@@ -167,7 +166,7 @@ int Compiler::compileCommonModule(vector<string>& names, BaseModule*& moduleResu
   }
 
   // find module path
-  string dir = loader.searchModuleDir(names, project->paths);
+  std::string dir = loader.searchModuleDir(names, project->paths);
   if (dir.empty()) {
     cout << "module not found: ";
     saveNames(names, cout);
@@ -214,12 +213,20 @@ int Compiler::compileCommonModule(vector<string>& names, BaseModule*& moduleResu
 int Compiler::compileModule(Module* module) {
   int error;
 
+  // debug
+  /* std::cout << "[compileModule begin, "; */
+  /* saveNames(module->names, std::cout); */
+  /* std::cout << "]\n"; */
+
   loader.loadModule(module);
+
+  // debug
+  /* std::cout << "lexer begin\n"; */
 
   for (auto file: module->files) {
     error = lexer.tokenize(file->content, file->tokens);
     if (error < 0) {
-      ostringstream buf;
+      std::ostringstream buf;
       buf << "lexer.tokenize error: " << error << ", file: " << file->absName
         << '\n';
       errorMsg = buf.str();
@@ -228,11 +235,12 @@ int Compiler::compileModule(Module* module) {
   }
 
   // debug
-  /* std::cout << "module.lexer ok" << std::endl; */
+  /* std::cout << "lexer ok\n"; */
+  /* std::cout << "parse begin\n"; */
 
   error = parser.parse(module);
   if (error < 0) {
-    ostringstream buf;
+    std::ostringstream buf;
     buf << "parser.parse error: " << error << ", file: "
       << parser.errorFile->absName << ", msg: " << parser.errorMessage << '\n';
     errorMsg = buf.str();
@@ -240,13 +248,13 @@ int Compiler::compileModule(Module* module) {
   }
 
   // debug
-  /* std::cout<< "module.parser ok" << std::endl; */
+  /* std::cout<< "parser ok" << std::endl; */
 
   BaseModule* importModule;
   for (auto import: module->imports) {
     error = compileCommonModule(import->names, importModule);
     if (error < 0) {
-      ostringstream buf;
+      std::ostringstream buf;
       buf << "error: " << errorMsg;
       buf << "module: ";
       saveNames(module->names, buf);
@@ -260,11 +268,11 @@ int Compiler::compileModule(Module* module) {
 
   // debug
   /* saveNames(module->names, std::cout); */
-  /* std::cout << std::endl; */
+  /* std::cout << "\nanalyzer begin\n"; */
 
   error = analyzer.process(env, module);
   if (error < 0) {
-    ostringstream buf;
+    std::ostringstream buf;
     buf << "analyzer.process error: " << error << ", file: "
       << analyzer.fileGroup->file->absName
       << ", msg: " << analyzer.errorMsg << '\n';
@@ -273,12 +281,13 @@ int Compiler::compileModule(Module* module) {
   }
 
   // debug
-  /* std::cout << "module.analyzer ok" << std::endl; */
+  /* std::cout << "analyzer ok\n"; */
+  /* std::cout << "format begin\n"; */
 
-  ostringstream moduleBuf;
+  std::ostringstream moduleBuf;
   error = jsFormatter.formatModule(module, moduleBuf);
   if (error < 0) {
-    ostringstream buf;
+    std::ostringstream buf;
     buf << "jsformatter.formatModule error: " << error << ", module: "
       << module->dir << '\n' << "msg: " << jsFormatter.errorMsg << '\n';
     errorMsg = buf.str();
@@ -286,6 +295,12 @@ int Compiler::compileModule(Module* module) {
   }
 
   module->output = moduleBuf.str();
+
+  // debug
+  /* std::cout << "format ok\n"; */
+  /* std::cout << "[compileModule end, "; */
+  /* saveNames(module->names, std::cout); */
+  /* std::cout << "]\n"; */
 
   return ERROR_OK;
 }
@@ -299,7 +314,7 @@ int Compiler::compileStyleModule(StyleModule* module) {
   for (auto file: module->files) {
     error = styleLexer.tokenize(file->content, file->tokens);
     if (error < 0) {
-      ostringstream buf;
+      std::ostringstream buf;
       buf << "styleLexer.tokenize error: " << error << ", file: " << file->absName
         << '\n';
       errorMsg = buf.str();
@@ -312,7 +327,7 @@ int Compiler::compileStyleModule(StyleModule* module) {
 
   error = styleParser.parse(module);
   if (error < 0) {
-    ostringstream buf;
+    std::ostringstream buf;
     buf << "styleParser.parse error: " << error << ", file: "
       << styleParser.errorFile->absName << '\n';
     errorMsg = buf.str();
@@ -334,11 +349,11 @@ int Compiler::compileStyleModule(StyleModule* module) {
 
   // debug
   /* saveNames(module->names, std::cout); */
-  /* std::cout << std::endl; */
+  /* std::cout << '\n'; */
 
   error = analyzer.process(env, module);
   if (error < 0) {
-    ostringstream buf;
+    std::ostringstream buf;
     buf << "analyzer.process error: " << error << ", file: "
       << analyzer.styleFileGroup->file->absName << ", msg: "
       << analyzer.errorMsg << '\n';
@@ -349,10 +364,10 @@ int Compiler::compileStyleModule(StyleModule* module) {
   // debug
   /* std::cout << "styleModule analyzer.process ok" << std::endl; */
 
-  ostringstream moduleBuf;
+  std::ostringstream moduleBuf;
   error = jsFormatter.formatStyleModule(module, moduleBuf);
   if (error < 0) {
-    ostringstream buf;
+    std::ostringstream buf;
     buf << "jsformatter.formatStyleModule error: " << error << ", module: "
       << module->dir << '\n';
     errorMsg = buf.str();
@@ -368,7 +383,7 @@ int Compiler::compileStyleModule(StyleModule* module) {
 }
 
 
-void Compiler::fillModuleQueue(BaseModule* module, vector<BaseModule*>& queue) {
+void Compiler::fillModuleQueue(BaseModule* module, std::vector<BaseModule*>& queue) {
   switch (module->code) {
     case MODULE_MUT:
       {
@@ -396,9 +411,9 @@ void Compiler::fillModuleQueue(BaseModule* module, vector<BaseModule*>& queue) {
 // TOOD: collect module flush queue
 // TODO: flush module flush queue
 
-int Compiler::flushModule(BaseModule* module, string& filename, vector<BaseModule*>& skip) {
+int Compiler::flushModule(BaseModule* module, std::string& filename, std::vector<BaseModule*>& skip) {
   ofstream mf(filename);
-  vector<BaseModule*> queue;
+  std::vector<BaseModule*> queue;
 
   fillModuleQueue(module, queue);
 
@@ -441,7 +456,7 @@ void Compiler::flushImportModule(BaseModule* module, ostream& store) {
 }
 
 
-Module* Compiler::getEnvModule(vector<string>& names) {
+Module* Compiler::getEnvModule(std::vector<std::string>& names) {
   for (auto module: env->modules)
     if (module->names == names) return module;
 
@@ -449,7 +464,7 @@ Module* Compiler::getEnvModule(vector<string>& names) {
 }
 
 
-StyleModule* Compiler::getEnvStyleModule(vector<string>& names) {
+StyleModule* Compiler::getEnvStyleModule(std::vector<std::string>& names) {
   for (auto module: env->styles)
     if (module->names == names) return module;
 
@@ -472,7 +487,7 @@ int Compiler::addCommonModule(BaseModule* module) {
       }
       break;
     default:
-      ostringstream buf;
+      std::ostringstream buf;
       buf << "unknown module code: " << module->code << "\nmodule.names: ";
       bool isFirst = true;
       for (auto name: module->names) {

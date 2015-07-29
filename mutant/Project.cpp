@@ -1,3 +1,7 @@
+#include <string>
+#include <string.h>
+#include <libgen.h>
+#include <dirent.h>
 #include <memory>
 #include <iostream> // for debug
 #include "Project.h"
@@ -5,8 +9,8 @@
 #include "helpers.h"
 
 
-using std::unique_ptr;
-using std::cout;
+char PROJECT_FILENAME[] = "/project.mutant";
+size_t const MIN_PROJECT_PATH_LENGTH = 4;
 
 
 Project::~Project() {
@@ -14,7 +18,32 @@ Project::~Project() {
 }
 
 
-string findProject(string& dir) {
+int Project::load() {
+  std::string curdir = getCurrentDir();
+  std::string abspath = getRealPath(curdir);
+  char buf[PATH_MAX];
+
+  for (;;) {
+    if (curdir.length() < MIN_PROJECT_PATH_LENGTH) {
+      return -1; // error
+    }
+
+    std::string proj = curdir + PROJECT_FILENAME;
+    if (existsFile(proj)) {
+      filename = proj;
+      content = getFileContent(proj);
+      dir = curdir;
+      return  0; // ok
+    }
+
+    // copy curdir to buf for, api compatibility
+    memcpy(buf, curdir.c_str(), curdir.length());
+    buf[curdir.length()] = '\0';
+
+    curdir = dirname(buf);
+  }
+
+  return -1; // error
 }
 
 
@@ -38,7 +67,7 @@ int parseProject(Project& project) {
         error = parseProjectOption(project, left, cursor);
         if (error < 0) return error;
       } else {
-        unique_ptr<Task> task(new Task());
+        std::unique_ptr<Task> task(new Task());
         error = parseTask(project.content, task.get(), left, cursor);
         if (error >= 0) project.tasks.push_back(task.release());
         if (error < 0) return error;
@@ -71,7 +100,7 @@ int parseProjectOption(Project& project, int left, int cursor) {
 // module.names
 // -o output_path
 // -s skip_module.names
-int parseTask(string& content, Task* task, int left, int right) {
+int parseTask(std::string& content, Task* task, int left, int right) {
   int space = findSymbol(content, ' ', left, right);
   splitNames(task->moduleNames, content, left, space);
 

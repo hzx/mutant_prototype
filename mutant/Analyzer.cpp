@@ -130,14 +130,12 @@ int Analyzer::processClass(Class* clas) {
 
   for (auto fn: clas->functions) {
     fn->clas = clas;
-
     error = processFunction(fn);
     if (error < 0) return error;
   }
 
   for (auto var: clas->variables) {
     var->clas = clas;
-
     error = processVariable(var);
     if (error < 0) return error;
   }
@@ -955,116 +953,94 @@ int Analyzer::processCatch(Catch* catch_) {
 
 int Analyzer::processBlockNode(Node* node) {
   switch (node->code) {
-    case Node::IDENTIFIER:
-      {
+    case Node::IDENTIFIER: {
         Identifier* n = reinterpret_cast<Identifier*>(node);
         return processIdentifier(n);
       }
-    case Node::VARIABLE:
-      {
+    case Node::VARIABLE: {
         Variable* n = reinterpret_cast<Variable*>(node);
         return processVariable(n);
       }
-    case Node::FUNCTION_CALL:
-      {
+    case Node::FUNCTION_CALL: {
         FunctionCall* n = reinterpret_cast<FunctionCall*>(node);
         return processFunctionCall(n);
       }
-    case Node::DELETE:
-      {
+    case Node::DELETE: {
         Delete* n = reinterpret_cast<Delete*>(node);
         return processDelete(n);
       }
-    case Node::ADD_ASSIGN:
-      {
+    case Node::ADD_ASSIGN: {
         AddAssign* n = reinterpret_cast<AddAssign*>(node);
         return processAddAssign(n);
       }
-    case Node::ADD_PREFIX:
-      {
+    case Node::ADD_PREFIX: {
         AddPrefix* n = reinterpret_cast<AddPrefix*>(node);
         return processAddPrefix(n);
       }
-    case Node::ADD_SUFFIX:
-      {
+    case Node::ADD_SUFFIX: {
         AddSuffix* n = reinterpret_cast<AddSuffix*>(node);
         return processAddSuffix(n);
       }
-    case Node::SUB_ASSIGN:
-      {
+    case Node::SUB_ASSIGN: {
         SubAssign* n = reinterpret_cast<SubAssign*>(node);
         return processSubAssign(n);
       }
-    case Node::SUB_PREFIX:
-      {
+    case Node::SUB_PREFIX: {
         SubPrefix* n = reinterpret_cast<SubPrefix*>(node);
         return processSubPrefix(n);
       }
-    case Node::SUB_SUFFIX:
-      {
+    case Node::SUB_SUFFIX: {
         SubSuffix* n = reinterpret_cast<SubSuffix*>(node);
         return processSubSuffix(n);
       }
-    case Node::MUL_ASSIGN:
-      {
+    case Node::MUL_ASSIGN: {
         MulAssign* n = reinterpret_cast<MulAssign*>(node);
         return processMulAssign(n);
       }
-    case Node::DIV_ASSIGN:
-      {
+    case Node::DIV_ASSIGN: {
         DivAssign* n = reinterpret_cast<DivAssign*>(node);
         return processDivAssign(n);
       }
-    case Node::IDIV_ASSIGN:
-      {
+    case Node::IDIV_ASSIGN: {
         IdivAssign* n = reinterpret_cast<IdivAssign*>(node);
         return processIdivAssign(n);
       }
-    case Node::INDEX:
-      {
+    case Node::INDEX: {
         Index* n = reinterpret_cast<Index*>(node);
         return processIndex(n);
       }
-    case Node::IF:
-      {
+    case Node::IF: {
         If* n = reinterpret_cast<If*>(node);
         return processIf(n);
       }
-    case Node::SWITCH:
-      {
+    case Node::SWITCH: {
         Switch* n = reinterpret_cast<Switch*>(node);
         return processSwitch(n);
       }
-    case Node::FOR:
-      {
+    case Node::FOR: {
         For* n = reinterpret_cast<For*>(node);
         return processFor(n);
       }
-    case Node::FOR_EACH:
-      {
+    case Node::FOR_EACH: {
         ForEach* n = reinterpret_cast<ForEach*>(node);
         return processForEach(n);
       }
-    case Node::FOR_IN:
-      {
+    case Node::FOR_IN: {
         ForIn* n = reinterpret_cast<ForIn*>(node);
         return processForIn(n);
       }
-    case Node::WHILE:
-      {
+    case Node::WHILE: {
         While* n = reinterpret_cast<While*>(node);
         return processWhile(n);
       }
-    case Node::RETURN:
-      {
+    case Node::RETURN: {
         Return* n = reinterpret_cast<Return*>(node);
         return processReturn(n);
       }
     case Node::BREAK:
     case Node::CONTINUE:
       break; // skip
-    case Node::TRY:
-      {
+    case Node::TRY: {
         Try* n = reinterpret_cast<Try*>(node);
         return processTry(n);
       }

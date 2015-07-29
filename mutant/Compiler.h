@@ -17,10 +17,6 @@
 #include "Project.h"
 
 
-using std::string;
-using std::vector;
-
-
 /*
  * in Modules (styles, modules) where to hold compiled modules
  *
@@ -29,18 +25,18 @@ class Compiler {
 public:
   int compile(Environment* env, Project* project);
   int compileTask(Task* task);
-  /* int compileCommonModule2(vector<string>& names); */
-  int compileCommonModule(vector<string>& names, BaseModule*& moduleResult);
+  /* int compileCommonModule2(std::vector<std::string>& names); */
+  int compileCommonModule(std::vector<std::string>& names, BaseModule*& moduleResult);
   int compileModule(Module* module);
   int compileStyleModule(StyleModule* module);
-  void fillModuleQueue(BaseModule* module, vector<BaseModule*>& queue);
-  int flushModule(BaseModule* module, string& filename, vector<BaseModule*>& skip);
+  void fillModuleQueue(BaseModule* module, std::vector<BaseModule*>& queue);
+  int flushModule(BaseModule* module, std::string& filename, std::vector<BaseModule*>& skip);
   void flushImportModule(BaseModule* module, ostream& store);
-  Module* getEnvModule(vector<string>& names);
-  StyleModule* getEnvStyleModule(vector<string>& names);
+  Module* getEnvModule(std::vector<std::string>& names);
+  StyleModule* getEnvStyleModule(std::vector<std::string>& names);
   int addCommonModule(BaseModule* module);
   // OLD
-  /* int compile(vector<Module*>& modules); */
+  /* int compile(std::vector<Module*>& modules); */
   /* int compileModule(Module* module); */
 
   // int compile target module
@@ -57,7 +53,7 @@ public:
   StyleParser styleParser;
   /* StyleFormatter styleFormatter; */
 
-  string errorMsg;
+  std::string errorMsg;
 };
 
 

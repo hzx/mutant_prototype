@@ -1,5 +1,6 @@
 #include <unistd.h>
 #include <dirent.h>
+#include <stdlib.h>
 #include <sstream>
 #include <fstream>
 #include <fstream>
@@ -8,9 +9,6 @@
 
 using std::ostringstream;
 using std::ifstream;
-
-
-const size_t BUF_SIZE = 4096;
 
 
 static const string base64_chars = 
@@ -75,12 +73,16 @@ string getFileContent(string const& path) {
 
 
 string getCurrentDir() {
-  char buf[BUF_SIZE];
-  char* path = getcwd(buf, BUF_SIZE);
-  if (path == nullptr) {
-    return "";
-  }
-  return path;
+  char buf[PATH_MAX];
+  char* path = getcwd(buf, PATH_MAX);
+  return path == nullptr ? "" : path;
+}
+
+
+string getRealPath(string const& path) {
+  char buf[PATH_MAX];
+  char* abspath = realpath(path.c_str(), buf);
+  return abspath == nullptr ? "" : abspath;
 }
 
 

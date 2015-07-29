@@ -16,6 +16,7 @@ bool existsFile(string& filename);
 bool existsDir(string& path);
 string getFileContent(string const& path);
 string getCurrentDir();
+string getRealPath(string const& path);
 int findSymbol(string const& content, char symbol, int left, int right);
 void splitNames(vector<string>& names, string& content, int left, int right);
 string getExtension(const string& filename);

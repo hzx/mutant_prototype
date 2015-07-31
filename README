@@ -4,3 +4,16 @@ features:
 - types
 - templates
 - tags
+
+[usage]
+
+# create project.mutant in project root
+
+# include libs path
+-I /abs/path/to/libs
+
+# tasks
+pub.loader -o path/relative/to/project/mutant/pub.loader.js
+pub -o path/relative/to/project/mutant/pub.js -s pub.loader
+
+lib.name -o output/file.js -s skip.lib

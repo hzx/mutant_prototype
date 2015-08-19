@@ -66,8 +66,8 @@ ExternType::ExternType() {
 }
 
 
-/* Node::~Node() { */
-/* } */
+Node::~Node() {
+}
 
 
 Nodes::~Nodes() {
@@ -100,8 +100,7 @@ NullLiteral::NullLiteral() {
 }
 
 
-ArrayLiteral::ArrayLiteral()
-    : type(nullptr) {
+ArrayLiteral::ArrayLiteral() {
   code = Node::ARRAY_LITERAL;
 }
 
@@ -111,9 +110,7 @@ ArrayLiteral::~ArrayLiteral() {
 }
 
 
-DicPair::DicPair()
-    : key(nullptr)
-    , value(nullptr) {
+DicPair::DicPair() {
 }
 
 
@@ -123,9 +120,7 @@ DicPair::~DicPair() {
 }
 
 
-DicLiteral::DicLiteral()
-    : keyType(nullptr)
-    , valueType(nullptr) {
+DicLiteral::DicLiteral() {
   code = Node::DIC_LITERAL;
 }
 
@@ -135,9 +130,7 @@ DicLiteral::~DicLiteral() {
 }
 
 
-Identifier::Identifier()
-    : type(nullptr)
-    , node(nullptr) {
+Identifier::Identifier() {
   code = Node::IDENTIFIER;
 }
 
@@ -147,8 +140,7 @@ Identifier::~Identifier() {
 }
 
 
-FunctionCall::FunctionCall()
-    : function(nullptr) {
+FunctionCall::FunctionCall() {
   code = Node::FUNCTION_CALL;
 }
 
@@ -159,8 +151,7 @@ FunctionCall::~FunctionCall() {
 }
 
 
-Lambda::Lambda()
-    : returnType(nullptr) {
+Lambda::Lambda() {
   code = Node::LAMBDA;
 }
 
@@ -176,8 +167,7 @@ Lambda::~Lambda() {
 /* } */
 
 
-New::New()
-    : clas(nullptr) {
+New::New() {
   code = Node::NEW;
 }
 
@@ -197,9 +187,7 @@ Delete::~Delete() {
 }
 
 
-Add::Add()
-    : left(nullptr)
-    , right(nullptr) {
+Add::Add() {
   code = Node::ADD;
 }
 
@@ -210,9 +198,7 @@ Add::~Add() {
 }
 
 
-AddAssign::AddAssign()
-    : left(nullptr)
-    , right(nullptr) {
+AddAssign::AddAssign() {
   code = Node::ADD_ASSIGN;
 }
 
@@ -223,8 +209,7 @@ AddAssign::~AddAssign() {
 }
 
 
-AddPrefix::AddPrefix()
-    : node(nullptr) {
+AddPrefix::AddPrefix() {
   code = Node::ADD_PREFIX;
 }
 
@@ -234,8 +219,7 @@ AddPrefix::~AddPrefix() {
 }
 
 
-AddSuffix::AddSuffix()
-    : node(nullptr) {
+AddSuffix::AddSuffix() {
   code = Node::ADD_SUFFIX;
 }
 
@@ -245,9 +229,7 @@ AddSuffix::~AddSuffix() {
 }
 
 
-Sub::Sub()
-    : left(nullptr)
-    , right(nullptr) {
+Sub::Sub() {
   code = Node::SUB;
 }
 
@@ -258,9 +240,7 @@ Sub::~Sub() {
 }
 
 
-SubAssign::SubAssign()
-    : left(nullptr)
-    , right(nullptr) {
+SubAssign::SubAssign() {
   code = Node::SUB_ASSIGN;
 }
 
@@ -271,8 +251,7 @@ SubAssign::~SubAssign() {
 }
 
 
-SubPrefix::SubPrefix()
-    : node(nullptr) {
+SubPrefix::SubPrefix() {
   code = Node::SUB_PREFIX;
 }
 
@@ -282,8 +261,7 @@ SubPrefix::~SubPrefix() {
 }
 
 
-SubSuffix::SubSuffix()
-    : node(nullptr) {
+SubSuffix::SubSuffix() {
   code = Node::SUB_SUFFIX;
 }
 
@@ -293,9 +271,7 @@ SubSuffix::~SubSuffix() {
 }
 
 
-Mul::Mul()
-    : left(nullptr)
-    , right(nullptr) {
+Mul::Mul() {
   code = Node::MUL;
 }
 
@@ -306,9 +282,7 @@ Mul::~Mul() {
 }
 
 
-MulAssign::MulAssign()
-    : left(nullptr)
-    , right(nullptr) {
+MulAssign::MulAssign() {
   code = Node::MUL_ASSIGN;
 }
 
@@ -319,9 +293,7 @@ MulAssign::~MulAssign() {
 }
 
 
-Div::Div()
-    : left(nullptr)
-    , right(nullptr) {
+Div::Div() {
   code = Node::DIV;
 }
 
@@ -332,9 +304,7 @@ Div::~Div() {
 }
 
 
-DivAssign::DivAssign()
-    : left(nullptr)
-    , right(nullptr) {
+DivAssign::DivAssign() {
   code = Node::DIV_ASSIGN;
 }
 
@@ -345,9 +315,7 @@ DivAssign::~DivAssign() {
 }
 
 
-Idiv::Idiv()
-    : left(nullptr)
-    , right(nullptr) {
+Idiv::Idiv() {
   code = Node::IDIV;
 }
 
@@ -358,9 +326,7 @@ Idiv::~Idiv() {
 }
 
 
-IdivAssign::IdivAssign()
-    : left(nullptr)
-    , right(nullptr) {
+IdivAssign::IdivAssign() {
   code = Node::IDIV_ASSIGN;
 }
 
@@ -371,9 +337,7 @@ IdivAssign::~IdivAssign() {
 }
 
 
-ShiftLeft::ShiftLeft()
-    : left(nullptr)
-    , right(nullptr) {
+ShiftLeft::ShiftLeft() {
   code = Node::SHIFT_LEFT;
 }
 
@@ -384,9 +348,7 @@ ShiftLeft::~ShiftLeft() {
 }
 
 
-ShiftRight::ShiftRight()
-    : left(nullptr)
-    , right(nullptr) {
+ShiftRight::ShiftRight() {
   code = Node::SHIFT_RIGHT;
 }
 
@@ -397,9 +359,7 @@ ShiftRight::~ShiftRight() {
 }
 
 
-Less::Less()
-    : left(nullptr)
-    , right(nullptr) {
+Less::Less() {
   code = Node::LESS;
 }
 
@@ -410,9 +370,7 @@ Less::~Less() {
 }
 
 
-LessEqual::LessEqual()
-    : left(nullptr)
-    , right(nullptr) {
+LessEqual::LessEqual() {
   code = Node::LESS_EQUAL;
 }
 
@@ -423,9 +381,7 @@ LessEqual::~LessEqual() {
 }
 
 
-Greater::Greater()
-    : left(nullptr)
-    , right(nullptr) {
+Greater::Greater() {
   code = Node::GREATER;
 }
 
@@ -436,9 +392,7 @@ Greater::~Greater() {
 }
 
 
-GreaterEqual::GreaterEqual()
-    : left(nullptr)
-    , right(nullptr) {
+GreaterEqual::GreaterEqual() {
   code = Node::GREATER_EQUAL;
 }
 
@@ -449,8 +403,7 @@ GreaterEqual::~GreaterEqual() {
 }
 
 
-Not::Not()
-    : node(nullptr) {
+Not::Not() {
   code = Node::NOT;
 }
 
@@ -460,9 +413,7 @@ Not::~Not() {
 }
 
 
-And::And()
-    : left(nullptr)
-    , right(nullptr) {
+And::And() {
   code = Node::AND;
 }
 
@@ -473,9 +424,7 @@ And::~And() {
 }
 
 
-Band::Band()
-    : left(nullptr)
-    , right(nullptr) {
+Band::Band() {
   code = Node::BAND;
 }
 
@@ -486,9 +435,7 @@ Band::~Band() {
 }
 
 
-Or::Or()
-    : left(nullptr)
-    , right(nullptr) {
+Or::Or() {
   code = Node::OR;
 }
 
@@ -499,9 +446,7 @@ Or::~Or() {
 }
 
 
-Xor::Xor()
-    : left(nullptr)
-    , right(nullptr) {
+Xor::Xor() {
   code = Node::XOR;
 }
 
@@ -512,9 +457,7 @@ Xor::~Xor() {
 }
 
 
-Equal::Equal()
-    : left(nullptr)
-    , right(nullptr) {
+Equal::Equal() {
   code = Node::EQUAL;
 }
 
@@ -525,9 +468,7 @@ Equal::~Equal() {
 }
 
 
-NotEqual::NotEqual()
-    : left(nullptr)
-    , right(nullptr) {
+NotEqual::NotEqual() {
   code = Node::NOT_EQUAL;
 }
 
@@ -538,9 +479,7 @@ NotEqual::~NotEqual() {
 }
 
 
-Index::Index()
-    : key(nullptr)
-    , node(nullptr) {
+Index::Index() {
   code = Node::INDEX;
 }
 
@@ -563,8 +502,7 @@ In::~In() {
 }
 
 
-If::If()
-    : condition(nullptr) {
+If::If() {
   code = Node::IF;
 }
 
@@ -581,8 +519,7 @@ Else::~Else() {
 }
 
 
-Case::Case()
-    : value(nullptr) {
+Case::Case() {
   code = Node::CASE;
 }
 
@@ -593,8 +530,7 @@ Case::~Case() {
 }
 
 
-Switch::Switch()
-    : value(nullptr) {
+Switch::Switch() {
   code = Node::SWITCH;
 }
 
@@ -607,8 +543,7 @@ Switch::~Switch() {
 }
 
 
-For::For()
-    : condition(nullptr) {
+For::For() {
   code = Node::FOR;
 }
 
@@ -621,9 +556,7 @@ For::~For() {
 }
 
 
-ForEach::ForEach()
-    : value(nullptr)
-    , values(nullptr) {
+ForEach::ForEach() {
   code = Node::FOR_EACH;
 }
 
@@ -647,8 +580,7 @@ ForIn::~ForIn() {
 }
 
 
-While::While()
-    : condition(nullptr) {
+While::While() {
   code = Node::WHILE;
 }
 
@@ -659,8 +591,7 @@ While::~While() {
 }
 
 
-Return::Return()
-    : node(nullptr) {
+Return::Return() {
   code = Node::RETURN;
 }
 

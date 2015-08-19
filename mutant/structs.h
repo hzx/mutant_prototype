@@ -185,14 +185,13 @@ public:
   int priority = 1000000;
   bool dontTouch = false;
 
-  // TODO: fix segmentation fault
-  /* virtual ~Node(); */
+  virtual ~Node();
 };
 
 
 class BlockNode: public Node {
 public:
-  BlockNode* parent = nullptr;
+  BlockNode* parent = nullptr; // just link
   vector<Variable*> variables; // just links - free not need
 };
 
@@ -242,7 +241,7 @@ class ArrayLiteral: public Node {
 public:
   ArrayLiteral();
   ~ArrayLiteral();
-  Type* type;
+  Type* type = nullptr;
   vector<Node*> nodes;
 };
 
@@ -251,8 +250,8 @@ class DicPair {
 public:
   DicPair();
   ~DicPair();
-  Node* key;
-  Node* value;
+  Node* key = nullptr;
+  Node* value = nullptr;
 };
 
 
@@ -260,8 +259,8 @@ class DicLiteral: public Node {
 public:
   DicLiteral();
   ~DicLiteral();
-  Type* keyType;
-  Type* valueType;
+  Type* keyType = nullptr;
+  Type* valueType = nullptr;
   vector<DicPair*> pairs;
 };
 
@@ -298,7 +297,7 @@ public:
   Lambda();
   ~Lambda();
   vector<string> returnTypeNames;
-  Type* returnType;
+  Type* returnType = nullptr;
   /* vector<FunctionParam*> params; */
   vector<Variable*> params;
   vector<Node*> nodes;
@@ -326,7 +325,7 @@ public:
   New();
   ~New();
   vector<string> names;
-  Class* clas;
+  Class* clas = nullptr;
   vector<Node*> params;
   bool isClassMember = false;
 };
@@ -634,7 +633,7 @@ public:
   ~Switch();
   Node* value = nullptr;
   vector<Case*> cases;
-  Case* def;
+  Case* def = nullptr;
   /* vector<Node*> defNodes; */
 };
 
@@ -817,7 +816,7 @@ public:
   Enum();
   ~Enum();
   vector<EnumAttribute*> attributes;
-  Class* clas = nullptr; // link
+  Class* clas = nullptr; // weak
 };
 
 

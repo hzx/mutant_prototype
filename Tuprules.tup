@@ -3,12 +3,14 @@ IMGUTIL=$HOME/projects/imgutil
 
 ifeq (@(DEBUG),1)
 BUILD=build-debug
+CFLAGS += -g -O0
 else
 BUILD=build-release
+CFLAGS += -O2
 endif
 
 CC = clang++
-OPT += -Wall -O2 -std=c++11
+OPT += -Wall -std=c++11
 
 CFLAGS += -I$(TUP_CWD)/mutant\
 -I/usr/local/include\

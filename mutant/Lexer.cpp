@@ -158,7 +158,8 @@ int Lexer::tokenize(string& source_, vector<Token>& tokens) {
         return ERROR_OK;
 
       default: // unknown symbol
-        std::cout << "unknown symbol: \"" << symbol << "\"\n";
+        std::cout << "unknown symbol: \"" << symbol << "\"\n"
+          << "linenum: " << lineNumber << std::endl;
         return LEXER_SYMBOL_ERROR;
     }
   }

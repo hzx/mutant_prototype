@@ -103,3 +103,21 @@ TEST_F(StyleParserTest, parseClassExtendsMulti) {
   ASSERT_THAT(clas->superNames[0]->names, superUiButton);
   ASSERT_THAT(clas->superNames[1]->names, superButtonAddIcon);
 }
+
+
+TEST_F(StyleParserTest, parseNamespaceVsClass) {
+  // TODO: implement conflict namespace versus class in the same module
+  ASSERT_TRUE(false);
+}
+
+
+TEST_F(StyleParserTest, parseNamespaceVsImport) {
+  // TODO: implement conflict namespace versus import alias in the same module
+  ASSERT_TRUE(false);
+}
+
+
+TEST_F(StyleParserTest, parseClassVsImport) {
+  // TODO: implement conflict class vs import alias in the same module
+  ASSERT_TRUE(false);
+}

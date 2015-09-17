@@ -52,7 +52,9 @@ public:
   int parseNew(New* newn, int left, int right);
   int parseIndex(Index* index, int left, int right);
   int parseAddPrefix(AddPrefix* ap, int left, int right);
+  int parseAddSuffix(AddSuffix* op, int left, int right);
   int parseSubPrefix(SubPrefix* sp, int left, int right);
+  int parseSubSuffix(SubSuffix* op, int left, int right);
 
   int parseBlockNode(vector<Node*>& nodes, int left, int right);
   int parseBlockNodes(vector<Node*>& nodes, int left, int right);

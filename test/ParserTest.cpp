@@ -1062,3 +1062,27 @@ TEST_F(ParserTest, parseIfIndexExpression) {
   ASSERT_TRUE(ne->right != nullptr);
   ASSERT_THAT(ne->right->code, Node::INDEX);
 }
+
+
+TEST_F(ParserTest, parseAddSuffix) {
+  file->content = R"(void main() {
+  int i = 0;
+  i++;
+}
+)";
+
+  int lexerError = lexer.tokenize(file->content, file->tokens);
+  ASSERT_THAT(lexerError, ERROR_OK);
+
+  int parserError = parser.parse(&module);
+  ASSERT_THAT(parserError, ERROR_OK);
+
+  ASSERT_THAT(module.functions.size(), 1);
+  Function* func = module.functions[0];
+
+  ASSERT_THAT(func->nodes.size(), 2);
+  ASSERT_THAT(func->nodes[0]->code, Node::VARIABLE);
+  ASSERT_THAT(func->nodes[0]->code, Node::ADD_SUFFIX);
+
+  ASSERT_TRUE(false);
+}

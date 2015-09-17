@@ -1296,7 +1296,13 @@ int JsFormatter::formatAdd(Add* node) {
 
 int JsFormatter::formatAddPrefix(AddPrefix* node) {
   *store << "++";
+  return formatRightNode(node->node);
+}
+
+
+int JsFormatter::formatAddSuffix(AddSuffix* node) {
   int error = formatRightNode(node->node);
+  *store << "++";
   return error;
 }
 
@@ -1316,7 +1322,13 @@ int JsFormatter::formatSub(Sub* node) {
 
 int JsFormatter::formatSubPrefix(SubPrefix* node) {
   *store << "--";
+  return formatRightNode(node->node);
+}
+
+
+int JsFormatter::formatSubSuffix(SubSuffix* node) {
   int error = formatRightNode(node->node);
+  *store << "--";
   return error;
 }
 

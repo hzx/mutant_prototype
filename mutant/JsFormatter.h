@@ -71,8 +71,10 @@ public:
 
   int formatAdd(Add* node);
   int formatAddPrefix(AddPrefix* node);
+  int formatAddSuffix(AddSuffix* node);
   int formatSub(Sub* node);
   int formatSubPrefix(SubPrefix* node);
+  int formatSubSuffix(SubSuffix* node);
   int formatMul(Mul* node);
   int formatDiv(Div* node);
   int formatIdiv(Idiv* node);

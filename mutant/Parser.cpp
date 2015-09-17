@@ -52,7 +52,9 @@ int const AIM_STRING_LITERAL = 12;
 int const AIM_INT_LITERAL = 13;
 int const AIM_FLOAT_LITERAL = 14;
 int const AIM_ADD_PREFIX = 15;
-int const AIM_SUB_PREFIX = 16;
+int const AIM_ADD_SUFFIX = 16;
+int const AIM_SUB_PREFIX = 17;
+int const AIM_SUB_SUFFIX = 18;
 
 
 Parser::Parser()
@@ -1281,6 +1283,21 @@ int Parser::parseAddPrefix(AddPrefix* ap, int left, int right) {
 }
 
 
+int Parser::parseAddSuffix(AddSuffix* op, int left, int right) {
+  int plus = findSymbol('+', left, right);
+
+  int error = parseRightNode(op->node, left, plus);
+  if (error < 0) return error;
+
+  // find second +
+  // TODO: find more safe way
+  plus = findSymbol('+', plus + 1, right);
+  if (plus == right) return right; // TODO: return error
+
+  return plus + 1;
+}
+
+
 int Parser::parseSubPrefix(SubPrefix* sp, int left, int right) {
   if (right - left < 1) return right;
 
@@ -1290,6 +1307,21 @@ int Parser::parseSubPrefix(SubPrefix* sp, int left, int right) {
   if (error < 0) return error;
 
   return semicolon + 1;
+}
+
+
+int Parser::parseSubSuffix(SubSuffix* op, int left, int right) {
+  int minus = findSymbol('-', left, right);
+
+  int error = parseRightNode(op->node, left, minus);
+  if (error < 0) return error;
+
+  // find second -
+  // TODO: find more safe way like findCommaDelimiter
+  minus = findSymbol('-', minus + 1, right);
+  if (minus == right) return right; // TODO: return error
+
+  return minus + 1;
 }
 
 
@@ -1896,11 +1928,25 @@ int Parser::parseBlockNode(vector<Node*>& nodes, int left, int right) {
         if (result >= 0) nodes.push_back(ap.release());
         return result;
       }
+    case AIM_ADD_SUFFIX:
+      {
+        unique_ptr<AddSuffix> op(new AddSuffix());
+        int result = parseAddSuffix(op.get(), left, right);
+        if (result >= 0) nodes.push_back(op.release());
+        return result;
+      }
     case AIM_SUB_PREFIX:
       {
         unique_ptr<SubPrefix> sp(new SubPrefix());
         int result = parseSubPrefix(sp.get(), left + 2, right);
         if (result >= 0) nodes.push_back(sp.release());
+        return result;
+      }
+    case AIM_SUB_SUFFIX:
+      {
+        unique_ptr<SubSuffix> op(new SubSuffix());
+        int result = parseSubSuffix(op.get(), left, right);
+        if (result >= 0) nodes.push_back(op.release());
         return result;
       }
   }
@@ -2210,6 +2256,7 @@ int Parser::detectAimGlobal(int left, int right) {
 
 
 int Parser::detectAimBlock(int left, int right) {
+  bool identifierFirst = false;
   for (int i = left; i < right; ++i) {
     switch (tokens->at(i).word[0]) {
       case '=':
@@ -2242,15 +2289,73 @@ int Parser::detectAimBlock(int left, int right) {
       case '+':
         {
         string& next = getNextTokenWord(right, i + 1);
-        if (next[0] == '+') return AIM_ADD_PREFIX;
+        if (next[0] == '+')
+          return identifierFirst ? AIM_ADD_SUFFIX : AIM_ADD_PREFIX;
         break;
         }
       case '-':
         {
         string& next = getNextTokenWord(right, i + 1);
-        if (next[0] == '-') return AIM_SUB_PREFIX;
+        if (next[0] == '-')
+          return identifierFirst ? AIM_SUB_SUFFIX : AIM_ADD_PREFIX;
         break;
         }
+      // identifier symbol first
+      case 'a':
+      case 'b':
+      case 'c':
+      case 'd':
+      case 'e':
+      case 'f':
+      case 'g':
+      case 'h':
+      case 'i':
+      case 'j':
+      case 'k':
+      case 'l':
+      case 'm':
+      case 'n':
+      case 'o':
+      case 'p':
+      case 'q':
+      case 'r':
+      case 's':
+      case 't':
+      case 'u':
+      case 'v':
+      case 'w':
+      case 'x':
+      case 'y':
+      case 'z':
+      case 'A':
+      case 'B':
+      case 'C':
+      case 'D':
+      case 'E':
+      case 'F':
+      case 'G':
+      case 'H':
+      case 'I':
+      case 'J':
+      case 'K':
+      case 'L':
+      case 'M':
+      case 'N':
+      case 'O':
+      case 'P':
+      case 'Q':
+      case 'R':
+      case 'S':
+      case 'T':
+      case 'U':
+      case 'V':
+      case 'W':
+      case 'X':
+      case 'Y':
+      case 'Z':
+      case '_':
+        identifierFirst = true;
+        break;
     }
   }
 

@@ -260,6 +260,11 @@ bool isTagName(vector<string>& names) {
     case 'd':
       if (name == "div") return true;
       break;
+    case 'h':
+      if (name == "h1") return true;
+      if (name == "h2") return true;
+      if (name == "h3") return true;
+      break;
     case 'i':
       if (name == "i") return true;
       if (name == "in") return true;

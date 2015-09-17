@@ -1053,6 +1053,11 @@ int Analyzer::processBlockNode(Node* node) {
 
 
 int Analyzer::processRightNode(Node* node) {
+  // debug
+  if (node == nullptr) {
+    throw ANALYZER_UNKNOWN_ERROR;
+  }
+
   switch (node->code) {
     case Node::BOOL_LITERAL:
     case Node::INT_LITERAL:

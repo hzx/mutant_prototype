@@ -118,7 +118,7 @@ public:
 
 class Node {
 public:
-  enum NodeCode {
+  enum NodeCode { // TODO: move to enum class outside Node
     VOID = 1,
     BOOL_LITERAL = 2,
     INT_LITERAL = 3,

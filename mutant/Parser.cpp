@@ -335,7 +335,8 @@ int Parser::parseEnum(Enum* en, int left, int right) {
 }
 
 
-int Parser::parseFunctionDeclaration(FunctionDeclaration* declaration, int left, int right) {
+int Parser::parseFunctionDeclaration(FunctionDeclaration* declaration,
+    int left, int right) {
   if (right - left < 1) return right;
 
   int semicolon = findSymbol(';', left, right);
@@ -457,7 +458,8 @@ int Parser::parseLambda(Lambda* lambda, int left, int right) {
 }
 
 
-int Parser::parseFunctionParams(vector<Variable*>& params, int left, int right) {
+int Parser::parseFunctionParams(vector<Variable*>& params,
+    int left, int right) {
   if (right - left < 1) return right;
 
   int paramRight = right;
@@ -487,14 +489,24 @@ int Parser::parseFunctionCall(FunctionCall* fc, int left, int right) {
 
   int result = parseNames(fc->names, left, semicolon);
   if (result < 0) return result; // contains error
-  if (result == semicolon) return FUNCTION_CALL_NO_NAME_ERROR;
+  if (result == semicolon) {
+      std::cout << "lineNum: " << tokens->at(left).line << std::endl;
+      std::cout << "left: " << left << std::endl;
+      std::cout << "right: " << right << std::endl;
+      std::cout << "semicolon: " << semicolon << std::endl;
+      std::cout << "---- tokens\n";
+      storeTokens(*tokens, left, right, std::cout);
+      std::cout << "\n---- end tokens" << std::endl;
+    return FUNCTION_CALL_NO_NAME_ERROR;
+  }
 
   string& next = getNextTokenWord(semicolon, result);
   int openRoundBracket = result;
   if (next[0] != '(') return FUNCTION_CALL_OPEN_ROUND_BRACKET_ERROR;
 
   int closeRoundBracket = findPairRoundBracket(openRoundBracket, semicolon);
-  result = parseFunctionCallParams(fc->params, openRoundBracket + 1, closeRoundBracket);
+  result = parseFunctionCallParams(fc->params, openRoundBracket + 1,
+      closeRoundBracket);
   if (result < 0) return result;
 
   if (tokens->at(closeRoundBracket + 1).word[0] == '.') {
@@ -506,7 +518,8 @@ int Parser::parseFunctionCall(FunctionCall* fc, int left, int right) {
 }
 
 
-int Parser::parseFunctionCallParams(vector<Node*>& params, int left, int right) {
+int Parser::parseFunctionCallParams(vector<Node*>& params,
+    int left, int right) {
   if (right - left < 1) return right;
 
   int cursor = left;
@@ -1795,9 +1808,22 @@ int Parser::parseBlockNode(vector<Node*>& nodes, int left, int right) {
 
   if (token.word == "delete") {
     unique_ptr<Delete> del(new Delete());
-    int error = parseRightNode(del->node, left + 1, right);
+    int semicolon = findSemicolon(left + 1, right);
+    int error = parseRightNode(del->node, left + 1, semicolon);
     if (error >= 0) nodes.push_back(del.release());
-    return error;
+    else return error;
+
+    // debug
+    if (tokens->at(error).line - token.line > 1) {
+      std::cout << "delete right result node line != delete line" << std::endl;
+      std::cout << "delete line: " << token.line << std::endl;
+      std::cout << "right result line: " << tokens->at(error).line << std::endl;
+      std::cout << "---- tokens\n";
+      storeTokens(*tokens, left, error, std::cout);
+      std::cout << "\n---- end tokens" << std::endl;
+    }
+
+    return semicolon == right ? error : semicolon + 1;
   }
 
   if (token.word == "if") {

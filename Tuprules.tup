@@ -3,7 +3,7 @@ IMGUTIL=$HOME/projects/imgutil
 
 ifeq (@(DEBUG),1)
 BUILD=build-debug
-CC = clang++
+CC = g++
 CFLAGS += -g -O0
 else
 BUILD=build-release

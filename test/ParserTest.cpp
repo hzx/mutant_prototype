@@ -1068,8 +1068,7 @@ TEST_F(ParserTest, parseAddSuffix) {
   file->content = R"(void main() {
   int i = 0;
   i++;
-}
-)";
+})";
 
   int lexerError = lexer.tokenize(file->content, file->tokens);
   ASSERT_THAT(lexerError, ERROR_OK);

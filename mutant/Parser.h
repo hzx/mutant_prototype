@@ -21,7 +21,8 @@ public:
   int parseImport(Import* import, int left, int right);
   int parseUsing(Using* us, int left, int right);
   int parseEnum(Enum* en, int left, int right);
-  int parseFunctionDeclaration(FunctionDeclaration* declaration, int left, int right);
+  int parseFunctionDeclaration(FunctionDeclaration* declaration,
+      int left, int right);
   int parseFunction(Function* function, int left, int right);
   int parseLambda(Lambda* lambda, int left, int right);
   int parseFunctionParams(vector<Variable*>& params, int left, int right);
@@ -78,7 +79,8 @@ public:
   int findPairBracket(int left, int right);
   int findCommaDelimiter(int left, int right);
   // left position after open tag
-  int findCloseTag(vector<string>& names, int& closeTagClose, int left, int right);
+  int findCloseTag(vector<string>& names, int& closeTagClose,
+      int left, int right);
   int checkRoundBrackets(int left, int right);
   int checkCurlyBrackets(int left, int right);
   int checkBrackets(int left, int right);

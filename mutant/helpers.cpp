@@ -12,8 +12,8 @@ void tokensToWords(vector<Token>& tokens, vector<string>& words) {
 
 
 void storeTokens(vector<Token>& tokens, int left, int right, ostream& store) {
-  for (Token& token: tokens) {
-    store << token.word << ' ';
+  for (int i = left; i < right; ++i) {
+    store << tokens.at(i).word << ' ';
   }
 }
 

@@ -1,8 +1,8 @@
+#include "Parser.h"
 #include <memory>
 #include <cstdlib>
 #include <sstream>
 #include <iostream>
-#include "Parser.h"
 #include "helpers.h"
 
 
@@ -94,6 +94,7 @@ int Parser::parse(Module* module_) {
     counter = checkCurlyBrackets(0, right);
     if (counter != 0) {
       errorMessage = std::to_string(counter);
+
       return COUNTER_CURLY_BRACKET_ERROR;
     }
 
@@ -502,7 +503,16 @@ int Parser::parseFunctionCall(FunctionCall* fc, int left, int right) {
 
   string& next = getNextTokenWord(semicolon, result);
   int openRoundBracket = result;
-  if (next[0] != '(') return FUNCTION_CALL_OPEN_ROUND_BRACKET_ERROR;
+  if (next[0] != '(') {
+      std::cout << "lineNum: " << tokens->at(left).line << std::endl;
+      std::cout << "left: " << left << std::endl;
+      std::cout << "right: " << right << std::endl;
+      std::cout << "semicolon: " << semicolon << std::endl;
+      std::cout << "---- tokens\n";
+      storeTokens(*tokens, left, right, std::cout);
+      std::cout << "\n---- end tokens" << std::endl;
+    return FUNCTION_CALL_OPEN_ROUND_BRACKET_ERROR;
+  }
 
   int closeRoundBracket = findPairRoundBracket(openRoundBracket, semicolon);
   result = parseFunctionCallParams(fc->params, openRoundBracket + 1,

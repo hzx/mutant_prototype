@@ -2,16 +2,16 @@ export HOME
 IMGUTIL=$HOME/projects/imgutil
 
 ifeq (@(DEBUG),1)
-BUILD=build-debug
-CC = g++
-CFLAGS += -g -O0
+  BUILD=build-debug
+  CC = clang++
+  CFLAGS += -g -O0
 else
-BUILD=build-release
-CC = g++
-CFLAGS += -O2
+  BUILD=build-release
+  CC = clang++
+  CFLAGS += -O2
 endif
 
-OPT += -Wall -std=c++11
+OPT += -Wall -std=c++14
 
 CFLAGS += -I$(TUP_CWD)/mutant\
 -I/usr/local/include\

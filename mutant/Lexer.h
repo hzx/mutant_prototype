@@ -1,7 +1,4 @@
-#ifndef MUTANT_LEXER_H
-#define MUTANT_LEXER_H
-
-
+#pragma once
 #include <string>
 #include <vector>
 #include "errors.h"
@@ -26,6 +23,3 @@ public:
   int right;
   size_t lineNumber;
 };
-
-
-#endif /* end of include guard: MUTANT_LEXER_H */

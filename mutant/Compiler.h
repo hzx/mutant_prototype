@@ -1,7 +1,4 @@
-#ifndef MUTANT_COMPILER_H
-#define MUTANT_COMPILER_H
-
-
+#pragma once
 #include <string>
 #include <vector>
 #include "Loader.h"
@@ -55,6 +52,3 @@ public:
 
   std::string errorMsg;
 };
-
-
-#endif /* end of include guard: MUTANT_COMPILER_H */

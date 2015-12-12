@@ -1,7 +1,4 @@
-#ifndef MUTANT_OPTIONS_H
-#define MUTANT_OPTIONS_H
-
-
+#pragma once
 #include <string>
 #include <vector>
 /* #include "utils.h" */
@@ -25,6 +22,3 @@ public:
   string mainModule;
   string dest;
 };
-
-
-#endif /* end of include guard: MUTANT_OPTIONS_H */

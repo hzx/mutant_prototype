@@ -1,7 +1,4 @@
-#ifndef MUTANT_STYLEFORMATTER_H
-#define MUTANT_STYLEFORMATTER_H
-
-
+#pragma once
 #include "structs.h"
 
 
@@ -11,6 +8,3 @@ public:
   int formatNamespace(StyleNamespace* ns);
   int formatClass(StyleClass* clas);
 };
-
-
-#endif /* end of include guard: MUTANT_STYLEFORMATTER_H */

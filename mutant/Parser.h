@@ -1,7 +1,4 @@
-#ifndef MUTANT_PARSER_H
-#define MUTANT_PARSER_H
-
-
+#pragma once
 #include <string>
 #include <vector>
 #include "structs.h"
@@ -98,6 +95,3 @@ public:
   int errorPos;
   string errorMessage;
 };
-
-
-#endif /* end of include guard: MUTANT_PARSER_H */

@@ -1,7 +1,4 @@
-#ifndef MUTANT_ANALYZER_H
-#define MUTANT_ANALYZER_H
-
-
+#pragma once
 #include <vector>
 #include <stack>
 #include "structs.h"
@@ -104,6 +101,3 @@ public:
   Function* function = nullptr;
   string errorMsg;
 };
-
-
-#endif /* end of include guard: MUTANT_ANALYZER_H */

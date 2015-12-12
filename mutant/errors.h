@@ -1,5 +1,4 @@
-#ifndef MUTANT_ERRORS_H
-#define MUTANT_ERRORS_H
+#pragma once
 
 
 char const* getErrorString(int const error);
@@ -124,6 +123,3 @@ int const ANALYZER_SUPERCLASS_NOT_FOUND_ERROR = -5003;
 int const ANALYZER_GROUP_DEPENDS_CROSS_ERROR = -5004;
 int const ANALYZER_SUPERCLASS_MODULE_NOT_FOUND_ERROR = -5005;
 int const ANALYZER_UNKNOWN_ERROR = -5006;
-
-
-#endif /* end of include guard: MUTANT_ERRORS_H */

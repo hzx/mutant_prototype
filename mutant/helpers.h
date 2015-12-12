@@ -1,7 +1,4 @@
-#ifndef MUTANT_HELPER_H
-#define MUTANT_HELPER_H
-
-
+#pragma once
 #include <string>
 #include <vector>
 #include <ostream>
@@ -32,6 +29,3 @@ void saveNames(vector<string>& names, ostream& store);
 void printGroups(vector<FileGroup*>& groups, ostream& store);
 void addGroup(vector<FileGroup*>& groups, FileGroup* group);
 void addStyleGroup(vector<StyleFileGroup*>& groups, StyleFileGroup* group);
-
-
-#endif /* end of include guard: MUTANT_HELPER_H */

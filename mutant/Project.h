@@ -1,7 +1,4 @@
-#ifndef MUTANT_PROJECT_H
-#define MUTANT_PROJECT_H
-
-
+#pragma once
 #include <string>
 #include <vector>
 #include "utils.h"
@@ -31,6 +28,3 @@ public:
 int parseProject(Project& project);
 int parseProjectOption(Project& project, int left, int cursor);
 int parseTask(std::string& content, Task* task, int left, int right);
-
-
-#endif /* end of include guard: MUTANT_PROJECT_H */

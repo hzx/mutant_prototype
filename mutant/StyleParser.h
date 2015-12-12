@@ -1,7 +1,4 @@
-#ifndef MUTANT_STYLEPARSER_H
-#define MUTANT_STYLEPARSER_H
-
-
+#pragma once
 #include <string>
 #include "structs.h"
 #include "errors.h"
@@ -42,6 +39,3 @@ public:
   int errorPos;
   string errorMessage;
 };
-
-
-#endif /* end of include guard: MUTANT_STYLEPARSER_H */

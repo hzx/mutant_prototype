@@ -1,7 +1,4 @@
-#ifndef MUTANT_JSFORMATTER_H
-#define MUTANT_JSFORMATTER_H
-
-
+#pragma once
 #include <vector>
 #include <ostream>
 #include "structs.h"
@@ -106,6 +103,3 @@ public:
   StyleModule* styleModule = nullptr;
   string errorMsg;
 };
-
-
-#endif /* end of include guard: MUTANT_JSFORMATTER_H */

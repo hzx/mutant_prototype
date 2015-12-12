@@ -1,7 +1,4 @@
-#ifndef MUTANT_STRUCTS_H
-#define MUTANT_STRUCTS_H
-
-
+#pragma once
 #include <string>
 #include <vector>
 
@@ -994,6 +991,3 @@ public:
   vector<StyleModule*> styles;
   vector<Module*> modules;
 };
-
-
-#endif /* end of include guard: MUTANT_STRUCTS_H */

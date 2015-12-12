@@ -1,7 +1,4 @@
-#ifndef MUTANT_STYLELEXER_H
-#define MUTANT_STYLELEXER_H
-
-
+#pragma once
 #include <string>
 #include <vector>
 #include "structs.h"
@@ -27,6 +24,3 @@ public:
   int right;
   size_t lineNumber;
 };
-
-
-#endif /* end of include guard: MUTANT_STYLELEXER_H */

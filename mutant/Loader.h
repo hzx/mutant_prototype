@@ -1,7 +1,4 @@
-#ifndef MUTANT_LOADER_H
-#define MUTANT_LOADER_H
-
-
+#pragma once
 #include <string>
 #include <vector>
 #include "Options.h"
@@ -32,6 +29,3 @@ public:
 
   Options* options;
 };
-
-
-#endif /* end of include guard: MUTANT_LOADER_H */

@@ -1,5 +1,4 @@
 export HOME
-IMGUTIL=$HOME/projects/imgutil
 
 ifeq (@(DEBUG),1)
   BUILD=build-debug
@@ -14,12 +13,10 @@ endif
 OPT += -Wall -std=c++14
 
 CFLAGS += -I$(TUP_CWD)/mutant\
--I/usr/local/include\
--I$(IMGUTIL)
+-I/usr/local/include
 
 LFLAGS += -L$(TUP_CWD)/mutant\
--L/usr/local/lib\
--L$(IMGUTIL)/$(BUILD)/imgutil
+-L/usr/local/lib
 
 !cc = |> $(CC) $(OPT) $(CFLAGS) -c %f -o %o |> %B.o
 !ccp = |> $(CC) $(OPT) $(CFLAGS) -fPIC -c %f -o %o |> %B.o

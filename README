@@ -1,5 +1,12 @@
 mutant - language for web development
 
+[build]
+install http://gittup.org/tup/
+run:
+tup variant configs/debug.config
+tup
+copy build-debug/mutant/mutant to system PATH
+
 features:
 - types
 - templates

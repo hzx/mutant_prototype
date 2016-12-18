@@ -1,0 +1,8 @@
+include_rules
+
+LFLAGS += -L../mutant
+LIBS += -lgmock -lgtest -lpthread -lmutant
+#RPATH += -Wl,-rpath="$"ORIGIN/../mutant:"$"ORIGIN
+
+: foreach *.cpp |> !cc |> {objs}
+: {objs} | ../mutant/libmutant.so |> !exe |>

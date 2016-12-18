@@ -1,0 +1,5 @@
+include_rules
+
+: mutant/libmutant.so |> cp %f %o |> bin/%b
+: integration_test/integration_test |> cp %f %o |> bin/%b
+: test/test |> cp %f %o |> bin/%b

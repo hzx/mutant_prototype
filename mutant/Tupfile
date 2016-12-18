@@ -1,6 +1,6 @@
 include_rules
 
-RPATH = -Wl,-rpath=$(IMGUTIL)/$(BUILD)/imgutil:"$"ORIGIN
+#RPATH = -Wl,-rpath=$(IMGUTIL)/$(BUILD)/imgutil:"$"ORIGIN
 
 : foreach *.cpp |> !ccp |> {objs}
 : {objs} |> !lib |>
